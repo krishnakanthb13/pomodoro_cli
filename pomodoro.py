@@ -377,15 +377,21 @@ class PomodoroTimer:
 
 
 def find_wav_files():
-    """Find all .wav files in current and subdirectories"""
+    """Find all .wav files in sounds directory"""
     wav_files = []
+    
+    # Check sounds directory first
+    sounds_dir = Path('sounds')
+    if sounds_dir.exists():
+        wav_files.extend(sounds_dir.glob('*.wav'))
+    
+    # Also check current directory as fallback/addition
     current_dir = Path('.')
+    wav_files.extend(current_dir.glob('*.wav'))
     
-    # Search current directory and one level down
-    for pattern in ['*.wav', '*/*.wav']:
-        wav_files.extend(current_dir.glob(pattern))
-    
-    return sorted([str(f) for f in wav_files])
+    # Remove duplicates and sort
+    unique_files = sorted(list(set([str(f) for f in wav_files])))
+    return unique_files
 
 
 def select_chime():
@@ -454,6 +460,13 @@ Examples:
     chime_file = args.chime
     if args.select_chime:
         chime_file = select_chime()
+    
+    # Smart path resolution for chime file
+    if chime_file and not os.path.exists(chime_file):
+        # Check in sounds directory
+        possible_path = os.path.join("sounds", chime_file)
+        if os.path.exists(possible_path):
+            chime_file = possible_path
     
     # Create and start timer
     timer = PomodoroTimer(
