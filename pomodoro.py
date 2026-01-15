@@ -129,15 +129,32 @@ class PomodoroTimer:
             with open(self.notes_file, 'a', encoding='utf-8') as f:
                 f.write(f"{timestamp} {phase_label}: {note_text}\n")
             
-            # Clear the current (timer) line
-            clear_width = self.last_display_length + 30
-            sys.stdout.write('\r' + ' ' * clear_width + '\r')
-            
             # Move cursor UP to the gap line, print the note, and restore the gap
-            # \033[F moves cursor to the beginning of the previous line
-            sys.stdout.write('\033[F')
-            print(f" ✓ Added: {note_text[:50]}{'...' if len(note_text) > 50 else ''}")
-            sys.stdout.write('\n') # Move to the next line to create the new gap
+            
+            # Calculate how many lines the current timer display occupies
+            try:
+                term_cols = os.get_terminal_size().columns
+            except OSError:
+                term_cols = 80
+            
+            # Calculate visual lines (subtract 1 for leading \r)
+            vis_len = max(0, self.last_display_length - 1)
+            lines_occupied = max(1, (vis_len + term_cols - 1) // term_cols)
+            
+            # Clear the current (bottom-most) line
+            sys.stdout.write('\r' + ' ' * (term_cols - 1) + '\r')
+            
+            # Move up past the timer block
+            for _ in range(lines_occupied):
+                sys.stdout.write('\033[F')
+            
+            # Print the note
+            print(f" ✓ Added: {note_text[:40]}{'...' if len(note_text) > 40 else ''}")
+            
+            # Create the new gap line (and ensure it's clean)
+            sys.stdout.write(' ' * (term_cols - 1)) # Clear line logic
+            sys.stdout.write('\r') # Back to start
+            sys.stdout.write('\n') # Move to the next line
             sys.stdout.flush()
     
     def ask_for_goal(self, cycle):
