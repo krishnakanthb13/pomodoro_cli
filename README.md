@@ -2,6 +2,8 @@
 
 ![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)
 
+![Pomodoro CLI](pomodoro_annotated.png)
+
 A high-performance, keyboard-centric Pomodoro timer designed for developers and power users who live in the terminal.
 
 ## Features
