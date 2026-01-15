@@ -31,6 +31,7 @@ warnings.filterwarnings("ignore", category=UserWarning, module="pygame")
 # Try multiple audio libraries
 AUDIO_AVAILABLE = False
 AUDIO_METHOD = None
+PHRASE_OPTION = 3  # 1: Goals, 2: Focus/Leap, 3: Adventure (Default)
 
 # Try pygame first (most reliable)
 try:
@@ -141,12 +142,27 @@ class PomodoroTimer:
         self.accepting_notes = False  # Disable note saving
         self.line_buffer = ""  # Clear any partial input
         
+        # Phrase configuration
+        # 1: Standard Goals
+        # 2: Focus/Leap
+        # 3: Adventure (Default)
+        
+        if PHRASE_OPTION == 1:
+            header_text = f"📝 Before starting Cycle {cycle} of {self.cycles}, set your Goal(s):"
+            input_prompt = "What do you want to accomplish this cycle? "
+        elif PHRASE_OPTION == 2:
+            header_text = f"🎯 Before starting Cycle {cycle} of {self.cycles}, set your Focus/Goal(s):"
+            input_prompt = "What Leap you are willing to take this time? "
+        else: # Default to 3
+            header_text = f"🚀 Before starting Cycle {cycle} of {self.cycles}, set your Adventure(s):"
+            input_prompt = "What Adventures you have in mind? "
+
         print(f"\n{'─'*60}")
-        print(f"📝 Before starting Cycle {cycle} of {self.cycles}, set your goal:")
+        print(header_text)
         print(f"{'─'*60}")
         print()
         
-        goal = input("What do you want to accomplish this cycle? ").strip()
+        goal = input(input_prompt).strip()
         
         if goal:
             timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
