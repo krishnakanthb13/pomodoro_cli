@@ -26,9 +26,9 @@ if not exist "pomodoro.txt" (
 echo Starting server and browser...
 echo.
 
-REM Launch a background task to wait and then open the browser
+REM Launch a background task to wait for the port to be active
 REM This ensures the server starts first
-start /b cmd /c "timeout /t 2 >nul && start "" "http://localhost:8080/pomodoro_review.html""
+start /b powershell -noprofile -command "$client = New-Object System.Net.Sockets.TcpClient; $maxRetries = 20; $retryCount = 0; $connected = $false; while (-not $connected -and $retryCount -lt $maxRetries) { try { $client.Connect('localhost', 8080); $connected = $true; $client.Close() } catch { Start-Sleep -Milliseconds 500; $retryCount++ } }; if ($connected) { Start-Process 'http://localhost:8080/pomodoro_review.html' }"
 
 echo [INFO] Attempting to start server on port 8080...
 echo [TIP] If the browser loads too fast, just REFRESH (F5).
