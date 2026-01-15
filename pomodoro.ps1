@@ -124,7 +124,9 @@ do {
         }
         "R" {
             Clear-Host
-            & cmd /c "pomodoro_review.bat"
+            & ".\pomodoro_review.ps1"
+            Clear-Host
+            Show-Menu
         }
         "0" {
             Clear-Host

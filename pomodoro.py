@@ -116,18 +116,25 @@ class PomodoroTimer:
         """Save a note with timestamp, elapsed minutes, and current phase"""
         if note_text.strip():
             timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-            # Calculate elapsed minutes from phase start
             elapsed_mins = 0
             if self.phase_start_time:
                 elapsed_secs = (datetime.now() - self.phase_start_time).total_seconds()
                 elapsed_mins = int(elapsed_secs // 60)
             phase_label = f"({self.current_phase} - {elapsed_mins})"
+            
             with open(self.notes_file, 'a', encoding='utf-8') as f:
                 f.write(f"{timestamp} {phase_label}: {note_text}\n")
-            # Clear the entire line (timer + typed text) and print confirmation
-            clear_width = self.last_display_length + len(note_text) + 10
+            
+            # Clear the current (timer) line
+            clear_width = self.last_display_length + 30
             sys.stdout.write('\r' + ' ' * clear_width + '\r')
+            
+            # Move cursor UP to the gap line, print the note, and restore the gap
+            # \033[F moves cursor to the beginning of the previous line
+            sys.stdout.write('\033[F')
             print(f" ✓ Added: {note_text[:50]}{'...' if len(note_text) > 50 else ''}")
+            sys.stdout.write('\n') # Move to the next line to create the new gap
+            sys.stdout.flush()
     
     def ask_for_goal(self, cycle):
         """Ask user for their goal/target before starting a cycle"""
@@ -224,34 +231,38 @@ class PomodoroTimer:
         print(f"\n{'='*60}")
         print(f"  {phase_name.upper()} TIME STARTED")
         print(f"{'='*60}")
-        print("Type notes anytime and press Enter to save them.\n")
+        print("Type notes anytime and press Enter to save them.")
+        print() # Permanent gap after instructions
+        print() # Initial gap above the timer
         
         while remaining > 0 and not self.stop_timer:
-            mins, secs = divmod(remaining, 60)
-            # Include line_buffer in display so typed text is preserved
-            timer_display = f"\r{phase_name} time: {mins:02d}:{secs:02d} remaining >> {self.line_buffer}"
-            # Pad with spaces to clear any old characters
-            padded_display = timer_display + " " * max(0, self.last_display_length - len(timer_display))
-            self.last_display_length = len(timer_display)
-            sys.stdout.write(padded_display + "\r" + timer_display)
-            sys.stdout.flush()
-            
             # Process any queued notes
             self.process_notes()
             
-            # Update display 10 times per second for responsive typing
+            mins, secs = divmod(remaining, 60)
+            timer_display = f"\r{phase_name} time: {mins:02d}:{secs:02d} remaining >> {self.line_buffer}"
+            # Update terminal title
+            sys.stdout.write(f"\033]2;{phase_name}: {mins:02d}:{secs:02d} remaining\007")
+            # Pad with spaces to clear any old characters
+            padded_display = timer_display + " " * max(0, self.last_display_length - len(timer_display))
+            self.last_display_length = len(timer_display)
+            sys.stdout.write(padded_display)
+            sys.stdout.flush()
+            
+            # Update display 50 times per second for smoother typing/backspacing
             # but only decrement timer once per second
-            for _ in range(10):
+            for _ in range(50):
                 if self.stop_timer:
                     break
-                time.sleep(0.1)
-                # Refresh display with current line_buffer
+                time.sleep(0.02)
+                # Process any queued notes (typing happens here)
+                self.process_notes()
+                
                 timer_display = f"\r{phase_name} time: {mins:02d}:{secs:02d} remaining >> {self.line_buffer}"
                 padded_display = timer_display + " " * max(0, self.last_display_length - len(timer_display))
                 self.last_display_length = len(timer_display)
-                sys.stdout.write(padded_display + "\r" + timer_display)
+                sys.stdout.write(padded_display)
                 sys.stdout.flush()
-                self.process_notes()
             
             remaining -= 1
         
@@ -301,6 +312,7 @@ class PomodoroTimer:
             print("  🎉 ALL CYCLES COMPLETED! Great work!")
             print("="*60)
             print(f"📄 All notes saved to: {self.notes_file}")
+            sys.stdout.write("\033]2;Pomodoro Timer: Completed!\007")
             self.play_chime()
             self.open_notes_file()
             

@@ -139,7 +139,7 @@ const TimeTracker = () => {
    * Expected format: [YYYY-MM-DD HH:MM:SS] (tag) note content
    */
   const parseEntry = (line: string): Entry | null => {
-    const regex = /\[(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})\]\s*\(([^)]*)\):\s*(.+)/;
+    const regex = /\[(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})\]\s*\(([^)]*)\):?\s*(.+)/;
     const match = line.match(regex);
 
     if (match) {
@@ -345,8 +345,15 @@ Use professional but encouraging tone and provide points.`,
 
   // Safe markdown renderer component
   const Markdown = ({ content }: { content: string }) => {
+    const sanitizedHtml = React.useMemo(() => {
+      const rawHtml = marked.parse(content || '');
+      return typeof window !== 'undefined' && (window as any).DOMPurify 
+        ? (window as any).DOMPurify.sanitize(rawHtml) 
+        : rawHtml;
+    }, [content]);
+
     return (
-      <div className="prose prose-invert prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: marked.parse(content) }} />
+      <div className="prose prose-invert prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: sanitizedHtml }} />
     );
   };
 

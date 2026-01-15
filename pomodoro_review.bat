@@ -1,42 +1,69 @@
 @echo off
+chcp 65001 >nul
 title Pomodoro Reviewer
 setlocal
 cd /d "%~dp0"
 
-if not exist "pomodoro.txt" (
-    echo [ERROR] pomodoro.txt not found!
-    echo Please ensure pomodoro.txt is in the same folder.
+echo ════════════════════════════════════════════════════════════
+echo            POMODORO REVIEWER SERVER
+echo ════════════════════════════════════════════════════════════
+echo.
+
+if not exist "pomodoro_review.html" (
+    echo [ERROR] pomodoro_review.html not found!
+    echo Please make sure all project files are in this folder.
     pause
     exit /b
 )
 
-echo Starting Pomodoro Reviewer...
+if not exist "pomodoro.txt" (
+    echo [ERROR] pomodoro.txt not found!
+    echo No history found to review.
+    pause
+    exit /b
+)
+
+echo Starting server and browser...
 echo.
 
-REM Open browser first (it will wait for server)
-echo Opening browser...
-start "" "http://localhost:8080/pomodoro_review.html"
+REM Launch a background task to wait and then open the browser
+REM This ensures the server starts first
+start /b cmd /c "timeout /t 2 >nul && start "" "http://localhost:8080/pomodoro_review.html""
 
-echo Starting server on port 8080...
+echo [INFO] Attempting to start server on port 8080...
+echo [TIP] If the browser loads too fast, just REFRESH (F5).
 echo.
 
-REM Try http-server (NPM), fallback to Python, then give error
+REM Detect and run server
 where http-server >nul 2>nul
 if %ERRORLEVEL% EQU 0 (
-    echo Using http-server...
-    cmd /c http-server -p 8080 -c-1
-) else (
-    where python >nul 2>nul
-    if %ERRORLEVEL% EQU 0 (
-        echo [INFO] http-server not found, using Python fallback...
-        python -m http.server 8080
-    ) else (
-        echo [ERROR] Neither http-server nor Python found!
-        echo Please install http-server (npm install -g http-server) or Python.
-        pause
-    )
+    echo [OK] Using http-server (Node.js)
+    call http-server -p 8080 -c-1
+    goto SERVER_DONE
+)
+
+where python >nul 2>nul
+if %ERRORLEVEL% EQU 0 (
+    echo [OK] Using Python server
+    python -m http.server 8080
+    goto SERVER_DONE
+)
+
+where python3 >nul 2>nul
+if %ERRORLEVEL% EQU 0 (
+    echo [OK] Using Python3 server
+    python3 -m http.server 8080
+    goto SERVER_DONE
 )
 
 echo.
-echo Server stopped. Press Enter to close this window.
-pause > nul
+echo [ERROR] No server engine found!
+echo Please install Python (python.org) or Node.js (nodejs.org).
+echo.
+pause
+exit /b
+
+:SERVER_DONE
+echo.
+echo Server has been stopped.
+pause
