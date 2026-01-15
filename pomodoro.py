@@ -17,11 +17,14 @@ import warnings
 import subprocess
 import platform
 
-# Non-blocking keyboard input for Windows
+# Non-blocking keyboard input
 if sys.platform == "win32":
     import msvcrt
     NONBLOCKING_INPUT = True
 else:
+    import select
+    import tty
+    import termios
     NONBLOCKING_INPUT = False
 
 # Suppress pygame's pkg_resources deprecation warning
@@ -216,11 +219,24 @@ class PomodoroTimer:
                     else:
                         time.sleep(0.05)  # No key pressed, small delay
                 else:
-                    # Fallback for non-Windows: use blocking input but with short timeout
-                    # This is less ideal but works
-                    note = input()
-                    if note.strip() and self.accepting_notes:
-                        self.note_queue.put(note)
+                    # Linux/macOS: Use select for polling stdin
+                    if select.select([sys.stdin], [], [], 0.05)[0]:
+                         # Read line if available
+                         try:
+                             line = sys.stdin.read(1)
+                             if line: # if char received
+                                 # We need to accumulate chars similar to Windows logic ideally,
+                                 # but for standard terminal, readline is safer if not in raw mode.
+                                 # Let's just use readline for simplicity as raw mode is complex here
+                                 full_line = sys.stdin.readline()
+                                 # Combine the first char + rest
+                                 note = line + full_line
+                                 if note.strip() and self.accepting_notes:
+                                     self.note_queue.put(note.strip())
+                         except IOError:
+                             pass
+                    else:
+                        pass # No input, continue loop
             except EOFError:
                 break
             except KeyboardInterrupt:
