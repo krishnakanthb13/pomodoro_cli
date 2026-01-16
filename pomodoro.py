@@ -288,6 +288,10 @@ class PomodoroTimer:
         task_id = progress.add_task("Timer", total=duration)
 
         # Use Rich Live display
+        # Initialize blink state
+        blink_visible = True
+        frame_count = 0
+
         with Live(console=console, refresh_per_second=20, transient=True) as live:
             while remaining > 0 and not self.stop_timer:
                 # Process any queued notes
@@ -323,8 +327,11 @@ class PomodoroTimer:
                 except (AttributeError, IOError):
                     pass
 
+                # Manual blink logic for main loop tick
+                cursor_markup = "[green]█[/]" if blink_visible else " "
+
                 # Create the text line with emulated cursor
-                timer_text = Text.from_markup(f"{phase_name} time: {mins:02d}:{secs:02d} remaining >> {self.line_buffer}[green]█[/]")
+                timer_text = Text.from_markup(f"{phase_name} time: {mins:02d}:{secs:02d} remaining >> {self.line_buffer}{cursor_markup}")
 
                 # Update the Live display
                 # User requested Group(progress, timer_text) - Progress ON TOP
@@ -338,8 +345,16 @@ class PomodoroTimer:
                     time.sleep(0.02)
                     self.process_notes()
 
+                    # Blink logic: Toggle every 10 frames (approx 0.2s)
+                    frame_count += 1
+                    if frame_count >= 10:
+                        blink_visible = not blink_visible
+                        frame_count = 0
+
+                    cursor_markup = "[green]█[/]" if blink_visible else " "
+
                     # Update text with new input buffer
-                    timer_text = Text.from_markup(f"{phase_name} time: {mins:02d}:{secs:02d} remaining >> {self.line_buffer}[green]█[/]")
+                    timer_text = Text.from_markup(f"{phase_name} time: {mins:02d}:{secs:02d} remaining >> {self.line_buffer}{cursor_markup}")
                     live.update(Group(progress, timer_text))
 
                 remaining -= 1
