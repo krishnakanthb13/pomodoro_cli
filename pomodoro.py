@@ -268,10 +268,22 @@ class PomodoroTimer:
         print() # Permanent gap after instructions
         
         # Initialize Progress Bar
+        # Width set to 60 to match the separator lines ('='*60)
+        # Note: 'expand=False' ensures it respects the width passed to BarColumn or calculated differently.
+        # However, to force the whole Progress renderable to be 60 chars, we can rely on BarColumn sizing
+        # but exact 60 char width for the whole line is tricky with TextColumns.
+        # A better approach is to rely on BarColumn(bar_width=40) + TextColumn...
+        # The user specifically asked "make the progress width with the lines ('='*60)".
+        # Let's try to constrain the Live display or Console options, but simpler is tuning the bar width.
+        # 60 chars total:
+        # [progress.percentage] is approx 4-5 chars.
+        # So BarColumn should be around 55 chars.
+        # Let's try a fixed bar width of 52 + percentage column.
+
         progress = Progress(
-            BarColumn(bar_width=None),
+            BarColumn(bar_width=52),
             TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
-            expand=True
+            expand=False
         )
         task_id = progress.add_task("Timer", total=duration)
 
@@ -285,11 +297,12 @@ class PomodoroTimer:
                 elapsed = duration - remaining
                 pct = elapsed / duration
 
+                # Green < 70% < Yellow < 80% < Red < 90%
                 if pct > 0.9:
                     style = "red bold"
                 elif pct > 0.8:
                     style = "red"
-                elif pct > 0.6:
+                elif pct > 0.7:
                     style = "yellow"
                 else:
                     style = "green"
@@ -303,13 +316,19 @@ class PomodoroTimer:
                 mins, secs = divmod(remaining, 60)
 
                 # Update terminal title
-                sys.stdout.write(f"\033]2;{phase_name}: {mins:02d}:{secs:02d} remaining\007")
+                # Use sys.__stdout__ to bypass rich capture and avoid artifacts in the Live display
+                try:
+                    sys.__stdout__.write(f"\033]2;{phase_name}: {mins:02d}:{secs:02d} remaining\007")
+                    sys.__stdout__.flush()
+                except (AttributeError, IOError):
+                    pass
 
                 # Create the text line
                 timer_text = Text(f"{phase_name} time: {mins:02d}:{secs:02d} remaining >> {self.line_buffer}")
 
                 # Update the Live display
-                live.update(Group(timer_text, progress))
+                # User requested Group(progress, timer_text) - Progress ON TOP
+                live.update(Group(progress, timer_text))
 
                 # Update display 50 times per second for smoother typing/backspacing
                 # but only decrement timer once per second
@@ -321,7 +340,7 @@ class PomodoroTimer:
 
                     # Update text with new input buffer
                     timer_text = Text(f"{phase_name} time: {mins:02d}:{secs:02d} remaining >> {self.line_buffer}")
-                    live.update(Group(timer_text, progress))
+                    live.update(Group(progress, timer_text))
 
                 remaining -= 1
         
