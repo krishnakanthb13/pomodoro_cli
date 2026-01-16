@@ -324,7 +324,7 @@ class PomodoroTimer:
                     pass
 
                 # Create the text line with emulated cursor
-                timer_text = Text.from_markup(f"{phase_name} time: {mins:02d}:{secs:02d} remaining >> {self.line_buffer}[green blink]█[/]")
+                timer_text = Text.from_markup(f"{phase_name} time: {mins:02d}:{secs:02d} remaining >> {self.line_buffer}[green]█[/]")
 
                 # Update the Live display
                 # User requested Group(progress, timer_text) - Progress ON TOP
@@ -339,7 +339,7 @@ class PomodoroTimer:
                     self.process_notes()
 
                     # Update text with new input buffer
-                    timer_text = Text.from_markup(f"{phase_name} time: {mins:02d}:{secs:02d} remaining >> {self.line_buffer}[green blink]█[/]")
+                    timer_text = Text.from_markup(f"{phase_name} time: {mins:02d}:{secs:02d} remaining >> {self.line_buffer}[green]█[/]")
                     live.update(Group(progress, timer_text))
 
                 remaining -= 1
