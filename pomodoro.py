@@ -52,6 +52,10 @@ COLOR_INFO = "yellow"
 COLOR_TIP = "green"
 COLOR_SUCCESS = "green"
 
+# Cursor blink speed (frames per toggle at 50Hz)
+# Lower = Faster, Higher = Slower. Default: 10 (approx 0.2s)
+CURSOR_BLINK_SPEED = 10
+
 # Try pygame first (most reliable)
 try:
     # Suppress pygame welcome message
@@ -354,9 +358,9 @@ class PomodoroTimer:
                     time.sleep(0.02)
                     self.process_notes()
 
-                    # Blink logic: Toggle every 10 frames (approx 0.2s)
+                    # Blink logic: Toggle every CURSOR_BLINK_SPEED frames
                     frame_count += 1
-                    if frame_count >= 10:
+                    if frame_count >= CURSOR_BLINK_SPEED:
                         blink_visible = not blink_visible
                         frame_count = 0
 
