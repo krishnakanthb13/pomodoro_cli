@@ -309,7 +309,7 @@ class PomodoroTimer:
                 timer_text = Text(f"{phase_name} time: {mins:02d}:{secs:02d} remaining >> {self.line_buffer}")
 
                 # Update the Live display
-                live.update(Group(progress, timer_text))
+                live.update(Group(timer_text, progress))
 
                 # Update display 50 times per second for smoother typing/backspacing
                 # but only decrement timer once per second
@@ -321,7 +321,7 @@ class PomodoroTimer:
 
                     # Update text with new input buffer
                     timer_text = Text(f"{phase_name} time: {mins:02d}:{secs:02d} remaining >> {self.line_buffer}")
-                    live.update(Group(progress, timer_text))
+                    live.update(Group(timer_text, progress))
 
                 remaining -= 1
         
