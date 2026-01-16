@@ -45,6 +45,13 @@ AUDIO_AVAILABLE = False
 AUDIO_METHOD = None
 PHRASE_OPTION = 3  # 1: Goals, 2: Focus/Leap, 3: Adventure (Default)
 
+# UI Colors (Neon/Cyberpunk theme)
+COLOR_SEPARATOR = "cyan"
+COLOR_HEADER = "magenta"
+COLOR_INFO = "yellow"
+COLOR_TIP = "green"
+COLOR_SUCCESS = "green"
+
 # Try pygame first (most reliable)
 try:
     # Suppress pygame welcome message
@@ -139,7 +146,7 @@ class PomodoroTimer:
                 f.write(f"{timestamp} {phase_label}: {note_text}\n")
             
             # Print the note above the timer using rich console
-            console.print(f" ✓ Added: {note_text[:40]}{'...' if len(note_text) > 40 else ''}")
+            console.print(f"[{COLOR_SUCCESS}] ✓ Added:[/{COLOR_SUCCESS}] {note_text[:40]}{'...' if len(note_text) > 40 else ''}")
     
     def ask_for_goal(self, cycle):
         """Ask user for their goal/target before starting a cycle"""
@@ -161,27 +168,29 @@ class PomodoroTimer:
             header_text = f"🚀 Before starting Cycle {cycle} of {self.cycles}, set your Adventure(s):"
             input_prompt = "What Adventures you have in mind? "
 
-        print(f"\n{'─'*60}")
-        print(header_text)
-        print(f"{'─'*60}")
-        print()
+        console.print(f"\n[{COLOR_SEPARATOR}]{'─'*60}[/{COLOR_SEPARATOR}]")
+        console.print(f"[{COLOR_HEADER}]{header_text}[/{COLOR_HEADER}]")
+        console.print(f"[{COLOR_SEPARATOR}]{'─'*60}[/{COLOR_SEPARATOR}]")
+        console.print()
         
-        goal = input(input_prompt).strip()
+        console.print(f"[{COLOR_TIP}]{input_prompt}[/{COLOR_TIP}]", end="")
+        goal = input().strip()
         
         if goal:
             timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
             with open(self.notes_file, 'a', encoding='utf-8') as f:
                 f.write(f"\n{timestamp} (CYCLE {cycle} of {self.cycles} - GOAL): {goal}\n")
-            print(f"✓ Goal saved successfully!")
+            console.print(f"[{COLOR_SUCCESS}]✓ Goal saved successfully![/{COLOR_SUCCESS}]")
         else:
-            print("No goal set.")
+            console.print("No goal set.")
         
         # Brief countdown to prepare (no extra Enter needed)
-        print("Starting in: ", end="", flush=True)
+        console.print(f"[{COLOR_TIP}]Starting in: [/{COLOR_TIP}]", end="")
         for i in range(5, 0, -1):
-            print(f"{i}...", end="", flush=True)
+            console.print(f"{i}...", end="")
+            sys.stdout.flush()
             time.sleep(1)
-        print(" GO!")
+        console.print(f"[{COLOR_HEADER}] GO![/{COLOR_HEADER}]")
         
         self.accepting_notes = True  # Re-enable note saving
     
@@ -261,11 +270,11 @@ class PomodoroTimer:
         self.phase_start_time = datetime.now()  # Track phase start for elapsed time in notes
         remaining = duration
         
-        print(f"\n{'='*60}")
-        print(f"  {phase_name.upper()} TIME STARTED")
-        print(f"{'='*60}")
-        print("Type notes anytime and press Enter to save them.")
-        print() # Permanent gap after instructions
+        console.print(f"\n[{COLOR_SEPARATOR}]{'='*60}[/{COLOR_SEPARATOR}]")
+        console.print(f"  [{COLOR_HEADER}]{phase_name.upper()} TIME STARTED[/{COLOR_HEADER}]")
+        console.print(f"[{COLOR_SEPARATOR}]{'='*60}[/{COLOR_SEPARATOR}]")
+        console.print(f"[{COLOR_TIP}]Type notes anytime and press Enter to save them.[/{COLOR_TIP}]")
+        console.print() # Permanent gap after instructions
         
         # Initialize Progress Bar
         # Width set to 60 to match the separator lines ('='*60)
@@ -360,25 +369,25 @@ class PomodoroTimer:
                 remaining -= 1
         
         if not self.stop_timer:
-            sys.stdout.write(f"\r{phase_name} time: 00:00 - COMPLETED!{' '*20}\n")
-            sys.stdout.write("="*60 + "\n")
-            sys.stdout.flush()
+            # We use transient=True, so the live display clears. We can just print normally.
+            console.print(f"\r{phase_name} time: 00:00 - COMPLETED!{' '*20}")
+            console.print(f"[{COLOR_SEPARATOR}]{'='*60}[/{COLOR_SEPARATOR}]")
             self.play_chime()
     
     def start(self):
         """Start the Pomodoro timer cycles"""
-        print("\n" + "="*60)
-        print("  🍅 POMODORO TIMER STARTED")
-        print("="*60)
-        print(f"Cycles: {self.cycles}", end=" | ", flush=True)
-        print(f"Work: {self.work_duration//60} min | Note: {self.note_duration//60} min | Break: {self.break_duration//60} min")
+        console.print(f"\n[{COLOR_SEPARATOR}]{'='*60}[/{COLOR_SEPARATOR}]")
+        console.print(f"  [{COLOR_HEADER}]🍅 POMODORO TIMER STARTED[/{COLOR_HEADER}]")
+        console.print(f"[{COLOR_SEPARATOR}]{'='*60}[/{COLOR_SEPARATOR}]")
+        console.print(f"[{COLOR_INFO}]Cycles: {self.cycles}[/{COLOR_INFO}]", end=" | ")
+        console.print(f"[{COLOR_INFO}]Work: {self.work_duration//60} min | Note: {self.note_duration//60} min | Break: {self.break_duration//60} min[/{COLOR_INFO}]")
         if self.chime_file:
-            print(f"Chime: {self.chime_file}", end=" | ", flush=True)
+            console.print(f"[{COLOR_INFO}]Chime: {self.chime_file}[/{COLOR_INFO}]", end=" | ")
         if AUDIO_AVAILABLE:
-            print(f"Audio: {AUDIO_METHOD}")
-        print(f"Notes saved to: {self.notes_file}")
-        print("💡 TIP: Press Ctrl+C at any time to stop the timer.")
-        print("="*60)
+            console.print(f"[{COLOR_INFO}]Audio: {AUDIO_METHOD}[/{COLOR_INFO}]")
+        console.print(f"[{COLOR_INFO}]Notes saved to: {self.notes_file}[/{COLOR_INFO}]")
+        console.print(f"[{COLOR_TIP}]💡 TIP: Press Ctrl+C at any time to stop the timer.[/{COLOR_TIP}]")
+        console.print(f"[{COLOR_SEPARATOR}]{'='*60}[/{COLOR_SEPARATOR}]")
         
         # Start ONE note-listening thread for the entire session
         note_thread = threading.Thread(target=self.listen_for_notes, daemon=True)
@@ -386,7 +395,7 @@ class PomodoroTimer:
         
         try:
             for cycle in range(1, self.cycles + 1):
-                print(f"\n🔄 CYCLE {cycle} of {self.cycles}")
+                console.print(f"\n[{COLOR_HEADER}]🔄 CYCLE {cycle} of {self.cycles}[/{COLOR_HEADER}]")
                 
                 # Ask for goal (note-taking disabled inside this function)
                 self.ask_for_goal(cycle)
@@ -401,17 +410,23 @@ class PomodoroTimer:
                 if cycle < self.cycles:
                     self.run_timer(self.break_duration, "Break")
             
-            print("\n\n" + "="*60)
-            print("  🎉 ALL CYCLES COMPLETED! Great work!")
-            print("="*60)
-            print(f"📄 All notes saved to: {self.notes_file}")
-            sys.stdout.write("\033]2;Pomodoro Timer: Completed!\007")
+            console.print(f"\n\n[{COLOR_SEPARATOR}]{'='*60}[/{COLOR_SEPARATOR}]")
+            console.print(f"  [{COLOR_HEADER}]🎉 ALL CYCLES COMPLETED! Great work![/{COLOR_HEADER}]")
+            console.print(f"[{COLOR_SEPARATOR}]{'='*60}[/{COLOR_SEPARATOR}]")
+            console.print(f"[{COLOR_INFO}]📄 All notes saved to: {self.notes_file}[/{COLOR_INFO}]")
+
+            try:
+                sys.__stdout__.write("\033]2;Pomodoro Timer: Completed!\007")
+                sys.__stdout__.flush()
+            except:
+                pass
+
             self.play_chime()
             self.open_notes_file()
             
         except KeyboardInterrupt:
-            print("\n\n⏸️ Timer stopped by user (Ctrl+C pressed)")
-            print(f"📄 Notes saved to: {self.notes_file}")
+            console.print(f"\n\n[{COLOR_HEADER}]⏸️ Timer stopped by user (Ctrl+C pressed)[/{COLOR_HEADER}]")
+            console.print(f"[{COLOR_INFO}]📄 Notes saved to: {self.notes_file}[/{COLOR_INFO}]")
             # input("\nPress Enter to open notes file and exit...")
             self.open_notes_file()
             time.sleep(0.5)  # Give threads time to clean up
