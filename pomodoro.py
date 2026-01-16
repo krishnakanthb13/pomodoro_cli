@@ -47,14 +47,14 @@ PHRASE_OPTION = 3  # 1: Goals, 2: Focus/Leap, 3: Adventure (Default)
 
 # UI Colors (Neon/Cyberpunk theme)
 COLOR_SEPARATOR = "cyan"
-COLOR_HEADER = "magenta"
+COLOR_HEADER = "cyan"
 COLOR_INFO = "yellow"
 COLOR_TIP = "green"
 COLOR_SUCCESS = "green"
 
 # Cursor blink speed (frames per toggle at 50Hz)
 # Lower = Faster, Higher = Slower. Default: 10 (approx 0.2s)
-CURSOR_BLINK_SPEED = 10
+CURSOR_BLINK_SPEED = 20
 
 # Try pygame first (most reliable)
 try:
