@@ -17,6 +17,15 @@ import warnings
 import subprocess
 import platform
 
+# Rich imports
+from rich.console import Console, Group
+from rich.live import Live
+from rich.progress import Progress, BarColumn, TextColumn
+from rich.text import Text
+
+# Initialize rich console
+console = Console()
+
 # Non-blocking keyboard input
 if sys.platform == "win32":
     import msvcrt
@@ -129,33 +138,8 @@ class PomodoroTimer:
             with open(self.notes_file, 'a', encoding='utf-8') as f:
                 f.write(f"{timestamp} {phase_label}: {note_text}\n")
             
-            # Move cursor UP to the gap line, print the note, and restore the gap
-            
-            # Calculate how many lines the current timer display occupies
-            try:
-                term_cols = os.get_terminal_size().columns
-            except OSError:
-                term_cols = 80
-            
-            # Calculate visual lines (subtract 1 for leading \r)
-            vis_len = max(0, self.last_display_length - 1)
-            lines_occupied = max(1, (vis_len + term_cols - 1) // term_cols)
-            
-            # Clear the current (bottom-most) line
-            sys.stdout.write('\r' + ' ' * (term_cols - 1) + '\r')
-            
-            # Move up past the timer block
-            for _ in range(lines_occupied):
-                sys.stdout.write('\033[F')
-            
-            # Print the note
-            print(f" ✓ Added: {note_text[:40]}{'...' if len(note_text) > 40 else ''}")
-            
-            # Create the new gap line (and ensure it's clean)
-            sys.stdout.write(' ' * (term_cols - 1)) # Clear line logic
-            sys.stdout.write('\r') # Back to start
-            sys.stdout.write('\n') # Move to the next line
-            sys.stdout.flush()
+            # Print the note above the timer using rich console
+            console.print(f" ✓ Added: {note_text[:40]}{'...' if len(note_text) > 40 else ''}")
     
     def ask_for_goal(self, cycle):
         """Ask user for their goal/target before starting a cycle"""
@@ -282,38 +266,64 @@ class PomodoroTimer:
         print(f"{'='*60}")
         print("Type notes anytime and press Enter to save them.")
         print() # Permanent gap after instructions
-        print() # Initial gap above the timer
         
-        while remaining > 0 and not self.stop_timer:
-            # Process any queued notes
-            self.process_notes()
-            
-            mins, secs = divmod(remaining, 60)
-            timer_display = f"\r{phase_name} time: {mins:02d}:{secs:02d} remaining >> {self.line_buffer}"
-            # Update terminal title
-            sys.stdout.write(f"\033]2;{phase_name}: {mins:02d}:{secs:02d} remaining\007")
-            # Pad with spaces to clear any old characters
-            padded_display = timer_display + " " * max(0, self.last_display_length - len(timer_display))
-            self.last_display_length = len(timer_display)
-            sys.stdout.write(padded_display)
-            sys.stdout.flush()
-            
-            # Update display 50 times per second for smoother typing/backspacing
-            # but only decrement timer once per second
-            for _ in range(50):
-                if self.stop_timer:
-                    break
-                time.sleep(0.02)
-                # Process any queued notes (typing happens here)
+        # Initialize Progress Bar
+        progress = Progress(
+            BarColumn(bar_width=None),
+            TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+            expand=True
+        )
+        task_id = progress.add_task("Timer", total=duration)
+
+        # Use Rich Live display
+        with Live(console=console, refresh_per_second=20, transient=True) as live:
+            while remaining > 0 and not self.stop_timer:
+                # Process any queued notes
                 self.process_notes()
                 
-                timer_display = f"\r{phase_name} time: {mins:02d}:{secs:02d} remaining >> {self.line_buffer}"
-                padded_display = timer_display + " " * max(0, self.last_display_length - len(timer_display))
-                self.last_display_length = len(timer_display)
-                sys.stdout.write(padded_display)
-                sys.stdout.flush()
-            
-            remaining -= 1
+                # Calculate color based on percentage elapsed
+                elapsed = duration - remaining
+                pct = elapsed / duration
+
+                if pct > 0.9:
+                    style = "red bold"
+                elif pct > 0.8:
+                    style = "red"
+                elif pct > 0.6:
+                    style = "yellow"
+                else:
+                    style = "green"
+
+                # Update bar style
+                progress.columns[0].complete_style = style
+                progress.columns[0].finished_style = style
+
+                progress.update(task_id, completed=elapsed)
+
+                mins, secs = divmod(remaining, 60)
+
+                # Update terminal title
+                sys.stdout.write(f"\033]2;{phase_name}: {mins:02d}:{secs:02d} remaining\007")
+
+                # Create the text line
+                timer_text = Text(f"{phase_name} time: {mins:02d}:{secs:02d} remaining >> {self.line_buffer}")
+
+                # Update the Live display
+                live.update(Group(progress, timer_text))
+
+                # Update display 50 times per second for smoother typing/backspacing
+                # but only decrement timer once per second
+                for _ in range(50):
+                    if self.stop_timer:
+                        break
+                    time.sleep(0.02)
+                    self.process_notes()
+
+                    # Update text with new input buffer
+                    timer_text = Text(f"{phase_name} time: {mins:02d}:{secs:02d} remaining >> {self.line_buffer}")
+                    live.update(Group(progress, timer_text))
+
+                remaining -= 1
         
         if not self.stop_timer:
             sys.stdout.write(f"\r{phase_name} time: 00:00 - COMPLETED!{' '*20}\n")
