@@ -7,10 +7,10 @@
 cd "$(dirname "$0")"
 
 # Define Colors
-CYAN='\033[0;36m'
+CYAN='\033[0;96m'
 GREEN='\033[0;92m'
 YELLOW='\033[0;33m'
-RED='\033[0;31m'
+RED='\033[0;91m'
 GRAY='\033[0;90m'
 NC='\033[0m' # No Color
 

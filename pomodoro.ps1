@@ -90,7 +90,7 @@ do {
         }
         "5" {
             Clear-Host
-            Write-Host "Starting Classic After Study..." -ForegroundColor Cyan
+            Write-Host "Starting Classic Pomodoro..." -ForegroundColor Cyan
             Start-PomodoroSession -Work 25 -Notes 5 -Break 5 -Cycles 4 -Chime "mixkit-arabian-mystery-harp.wav"
         }
         "6" {

@@ -6,11 +6,11 @@
 # Ensure we are in the script's directory
 cd "$(dirname "$0")"
 
-# Define Colors
-CYAN='\033[0;36m'
+# Define Colors (Matching ANSI codes in .bat where possible)
+CYAN='\033[0;96m'
 GREEN='\033[0;92m'
 YELLOW='\033[0;33m'
-RED='\033[0;31m'
+RED='\033[0;91m'
 PURPLE='\033[0;95m'
 GRAY='\033[0;90m'
 WHITE='\033[0;37m' 
@@ -54,12 +54,14 @@ while true; do
     echo
     echo -e "${CYAN}[R] Review Sessions      - View session history${NC}"
     echo
+    echo -e "${CYAN}[S] Settings Configuration   - Configure all options${NC}"
+    echo
     echo -e "${RED}[0] Exit${NC}"
     echo
     echo -e "${CYAN}════════════════════════════════════════════════════════════${NC}"
     echo
 
-    read -p "Enter your choice (0-9/R): " choice
+    read -p "Enter your choice (0-9/R/S): " choice
 
     echo
     case $choice in
@@ -92,18 +94,7 @@ while true; do
             run_pomodoro pomodoro.py -w 10 -n 2 -b 3 -c 8 --chime mixkit-arabian-mystery-harp.wav
             ;;
         8)
-            echo
-            echo -e "${CYAN}═══════════════════════════════════════${NC}"
-            echo -e "  ${BOLD}CUSTOM POMODORO SETTINGS${NC}"
-            echo -e "${CYAN}═══════════════════════════════════════${NC}"
-            echo
-            read -p "Work duration (minutes): " work
-            read -p "Note-taking duration (minutes): " note
-            read -p "Break duration (minutes): " break_time
-            read -p "Number of cycles: " cycles
-            echo
-            echo -e "${GREEN}Starting custom session...${NC}"
-            run_pomodoro pomodoro.py -w "$work" -n "$note" -b "$break_time" -c "$cycles" --select-chime
+            run_pomodoro pomodoro.py --custom
             ;;
         9)
             echo -e "${GRAY}Starting Test Mode (1 min each)...${NC}"
@@ -119,10 +110,16 @@ while true; do
                 echo -e "${RED}pomodoro_review.sh not found!${NC}"
             fi
             ;;
+        [Ss]*)
+            run_pomodoro pomodoro.py --settings
+            read -p "Press Enter to continue..."
+            ;;
         0)
+            clear
             echo
             echo -e "${CYAN}Thank you for using Pomodoro Timer! 🍅${NC}"
             echo
+            sleep 2
             exit 0
             ;;
         *)
@@ -131,13 +128,21 @@ while true; do
             ;;
     esac
 
-    echo
-    echo -e "${CYAN}════════════════════════════════════════════════════════════${NC}"
-    echo
-    read -p "Run another session? (y/n): " again
-    echo
-    if [[ ! $again =~ ^[Yy] ]]; then
-        echo -e "${CYAN}Thank you for using Pomodoro Timer! 🍅${NC}"
-        exit 0
+    # Don't ask to run again if just coming back from Review or Settings
+    if [[ ! $choice =~ [RrSs] ]]; then
+        echo
+        echo -e "${CYAN}════════════════════════════════════════════════════════════${NC}"
+        echo
+        read -p "Run another session? (y/n): " again
+        echo
+        if [[ ! $again =~ ^[Yy] ]]; then
+            clear
+            echo
+            echo -e "${CYAN}Thank you for using Pomodoro Timer! 🍅${NC}"
+            echo
+            sleep 2
+            exit 0
+        fi
     fi
 done
+

@@ -70,7 +70,7 @@ This project is a multi-platform CLI Pomodoro timer designed for high productivi
 - **Log Format**: Appends all events (Goal setting, Phases, Notes, Skips) to `pomodoro.txt` with UTF-8 encoding.
 
 ### 2. The Launchers
-- **Uniformity**: Each launcher (`.bat`, `.ps1`, `.sh`) implements the same menu system with 7 presets (e.g., Deep Work, Study Session) and custom options.
+- **Uniformity**: Each launcher (`.bat`, `.ps1`, `.sh`) implements the same menu system with 7 presets (e.g., Deep Work, Study Session), Session Review, and interactive Settings configuration.
 - **Argument Passing**: They parse user selection and construct the appropriate command line arguments for `pomodoro.py` (e.g., `-w 50 -n 10 -b 15 -c 3`).
 
 ### 3. The Reviewer
