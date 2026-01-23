@@ -21,7 +21,7 @@ This project is a multi-platform CLI Pomodoro timer designed for high productivi
 - **Context-Aware Notes**: Each note includes timestamp, phase label, and elapsed minutes within the current phase.
 - **Audio Chimes**: Context-aware sounds for phase completion using pygame or winsound fallback.
 - **Persistence**: Human-readable log format (`pomodoro.txt`) that enables portability and simple parsing.
-- **Auto-Open Notes**: Automatically opens the notes file upon session completion or interruption.
+- **Auto-Open Notes**: Automatically opens the notes file upon session completion or interruption, or manually via `Ctrl+O` during timer execution.
 - **Review Dashboard**: React-based visualization with Date grouping and Calendar view.
 - **AI Summarization**: Integration with Google Gemini API to generate daily summaries from your raw notes.
 - **Cross-Platform**: Full support for Windows (CMD/PowerShell), Linux (Bash), and macOS.
@@ -61,7 +61,7 @@ This project is a multi-platform CLI Pomodoro timer designed for high productivi
 - **Input Handling**: 
     - Windows: Uses `msvcrt` for non-blocking key reads with character buffering. 
     - Unix: Uses `select` and `sys.stdin` to achieve similar non-blocking behavior.
-    - Supports `Ctrl+P` (Pause), `Ctrl+K` (Skip), and standard note entry.
+    - Supports `Ctrl+P` (Pause), `Ctrl+K` (Skip), `Ctrl+O` (Open notes file), and standard note entry.
 - **State Management**: Tracks current phase (Work/Journal/Break), phase start time, and handles transitions automatically. Supports Pausing (`Ctrl+P`) which freezes the countdown and elapsed time tracking.
 - **Desktop Notifications**: Integrated with `plyer` to provide system-level notifications for phase transitions and session events.
 - **Theme Engine**: Decoupled theme logic in `themes.py` allows for easy customization and switching between palettes without modifying the core logic.

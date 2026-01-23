@@ -4,6 +4,10 @@ pomodoro_ai.txt
 RELEASE_NOTES.md
 SOCIAL_MEDIA.md
 
+# Gemini
+.gemini/
+feature_summary_*.md
+
 # User Config (persists preferences)
 config.json
 

@@ -33,7 +33,7 @@ A high-performance, keyboard-centric Pomodoro timer designed for developers and 
 - **Quick List Controls**: Collapse All/Expand All buttons for instant date list management.
 - **Icon-Enhanced Navigation**: All navigation buttons include relevant icons for better visual clarity.
 - **Unified Page Layout**: Consistent width and padding across all views for a professional appearance.
-- **Auto-Open Notes**: Notes file opens automatically when you finish or stop the timer.
+- **Auto-Open Notes**: Notes file opens automatically when you finish or stop the timer, or press `Ctrl+O` anytime during execution.
 
 ## 🚀 Quick Start
 
@@ -100,6 +100,7 @@ python pomodoro.py -w 25 -n 5 -b 10 -c 4 --select-chime
 5. **Shortcuts**:
     - `Ctrl+P`: **Pause/Resume** the timer.
     - `Ctrl+K`: **Skip phase** and move to the next.
+    - `Ctrl+O`: **Open notes file** in your default text editor.
     - `Ctrl+C`: **Stop** the timer and open notes.
 6. **Completion**: Chime plays, desktop notification appears, and your notes file opens automatically.
 

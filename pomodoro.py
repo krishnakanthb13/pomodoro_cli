@@ -258,6 +258,8 @@ class PomodoroTimer:
                                     notifications.notify_resumed()
                         elif char == '\x0b':  # Ctrl+K - Skip phase
                             self.skip_phase = True
+                        elif char == '\x0f':  # Ctrl+O - Open notes file
+                            self.open_notes_file()
                         elif ord(char) >= 32:  # Printable character
                             self.line_buffer += char
                             # Timer display will show this on next tick
@@ -274,6 +276,9 @@ class PomodoroTimer:
                                  continue
                              if line == '\x0b':  # Ctrl+K - Skip phase
                                  self.skip_phase = True
+                                 continue
+                             if line == '\x0f':  # Ctrl+O - Open notes file
+                                 self.open_notes_file()
                                  continue
                              if line: # if char received
                                  # We need to accumulate chars similar to Windows logic ideally,
@@ -444,7 +449,7 @@ class PomodoroTimer:
             console.print(f"[{COLOR_INFO}]Chime: {self.chime_file}[/{COLOR_INFO}]", end=" | ")
         if AUDIO_AVAILABLE:
             console.print(f"[{COLOR_INFO}]Audio: {AUDIO_METHOD}[/{COLOR_INFO}]")
-        console.print(f"[{COLOR_INFO}]Notes saved to: {self.notes_file}[/{COLOR_INFO}]")
+        console.print(f"[{COLOR_INFO}]Notes saved to: {self.notes_file} | Ctrl+O to open notes[/{COLOR_INFO}]")
         console.print(f"[{COLOR_TIP}]💡 Ctrl+C to stop | Ctrl+P to pause | Ctrl+K to skip phase[/{COLOR_TIP}]")
         console.print(f"[{COLOR_SEPARATOR}]{'='*60}[/{COLOR_SEPARATOR}]")
         
