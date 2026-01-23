@@ -78,7 +78,9 @@ This project is a multi-platform CLI Pomodoro timer designed for high productivi
 - **Analytics Engine**:
     - **Heatmap Calendar**: A visual representation of activity intensity across the year.
     - **Streak Tracking**: Calculates current and longest session streaks.
-    - **Productivity Graphs**: Powered by `Chart.js` to visualize note-taking and work phases over time.
+    - **Productivity Graphs**: Powered by `Chart.js` to visualize note-taking and work phases with optimized x-axis and consistent ISO-date tooltips.
+    - **Contextual Help**: Integrated info buttons with pulsing green glows providing tooltips for every analytics block.
+    - **Precise Calculations**: Focus time is derived from actual timestamps (interval between cycle start and the last record before the next cycle) rather than fixed estimates.
 - **Data Loading**: Fetches and parses `pomodoro.txt`. Supports fallback to browser local storage for offline review.
 - **AI Integration**: Connects to Google Gemini API to transform raw logs into meaningful summaries.
 
@@ -142,6 +144,7 @@ This project is a multi-platform CLI Pomodoro timer designed for high productivi
    - User types notes during the timer.
    - `pomodoro.py` writes lines to `pomodoro.txt`: `[Timestamp] (Phase - ElapsedMins): Note content`.
    - Terminal title updates with current phase and remaining time.
+   - **Analytics Processing**: `pomodoro_review.html` parses timestamps to calculate actual focus duration based on the gap between cycle starts and the final note of that cycle.
 4. **Completion**:
    - Chime plays upon phase completion.
    - Notes file opens automatically upon session end or Ctrl+C.

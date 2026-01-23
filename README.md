@@ -19,7 +19,8 @@ A high-performance, keyboard-centric Pomodoro timer designed for developers and 
 - **Integrated Note-Taking**: Capture thoughts instantly without stopping the timer or switching windows.
 - **Context-Aware Notes**: Each note is tagged with timestamp, phase, and elapsed minutes.
 - **Dynamic Terminal Title**: See current phase and remaining time in your taskbar/window title.
-- **Advanced Analytics**: Interactive dashboard with heatmap calendars, streak tracking, and productivity charts.
+- **Advanced Analytics**: Interactive dashboard with heatmap calendars, streak tracking, activity charts, and contextual info tooltips.
+- **Accurate Focus Tracking**: Measures actual time spent working by tracking intervals between your notes and phase starts.
 - **Goal Setting**: Set your intentions before each cycle with customizable prompt styles.
 - **Cross-Platform**: Native launchers for Windows (`.bat`, `.ps1`) and Linux/macOS (`.sh`).
 - **Review System**: Built-in dashboard to visualize your sessions and generate AI summaries of your day.
