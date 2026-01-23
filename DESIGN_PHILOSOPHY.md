@@ -19,9 +19,15 @@ Productivity tools often force a choice between structure and flexibility.
 ### 2. Visual Feedback
 - **Progress Bar**: A color-coded progress bar transitions from green through yellow to red as time runs out, giving you an instant sense of urgency without requiring you to read numbers.
 - **Dynamic Terminal Title**: The window title always shows the current phase and remaining time—visible even when the terminal is minimized or in the taskbar.
-- **Neon/Cyberpunk Theme**: A carefully chosen color palette (cyan, yellow, green) that's easy on the eyes during long sessions while remaining visually distinct.
+- **Visual Identity (Themes)**: A carefully curated set of color palettes (cyberpunk, forest, sunset, etc.) that allow users to personalize their focus environment to their mood.
+- **Urgency Visualization**: Proactive color shifts in the progress bar (Green → Yellow → Red) act as a subtle biological trigger to re-engage with the task.
 
-### 3. Context Preservation
+### 3. Personal Branding & Mood
+Focus is not just about logic; it's about environment.
+- **Five Stunning Themes**: From the neon glow of `cyberpunk` to the calming greens of `forest`, the CLI adapts to your aesthetic preference.
+- **Persistent Choice**: Your theme and notification settings are preserved, making the tool feel like a permanent part of your workspace.
+
+### 4. Context Preservation
 Standard Pomodoro timers treat "Work" as a black box. This tool treats it as a **stream of consciousness** by recording thoughts with:
 - Timestamp
 - Phase (Work vs Journal vs Break)
@@ -29,18 +35,24 @@ Standard Pomodoro timers treat "Work" as a black box. This tool treats it as a *
 
 You create a detailed "Flight Recorder" of your session. Only by seeing *when* you get distracted or have an idea can you improve your workflow.
 
-### 4. Intentional Start
+### 5. Data-Driven Focus (Analytics)
+Productivity is an infinite game. The new **Analytics Dashboard** transforms raw notes into insights:
+- **Heatmap Calendar**: Visualize your monthly consistency.
+- **Streak Counters**: Gamify your focus by maintaining daily session streaks.
+- **Productivity Charts**: Identify patterns in your output across different days of the week.
+
+### 6. Intentional Start
 Before each cycle, the tool prompts you to set your **Adventure(s)** (or Goals/Focus—configurable). This small ritual:
 - Forces you to articulate what you're about to do.
 - Creates a record to compare against your actual work.
 - Provides psychological commitment to the task.
 
-### 5. Simplicity & Portability
+### 7. Simplicity & Portability
 - **Zero-Install (mostly)**: Written in standard Python with two dependencies (`rich` for UI, `pygame` for audio).
 - **Universal Access**: Works on Windows (CMD/PowerShell), macOS, and Linux.
 - **Plain Text Data**: All data is stored in `pomodoro.txt`. No databases, no proprietary formats. You own your data forever.
 
-### 6. Seamless Completion
+### 8. Seamless Completion
 When your session ends or you press Ctrl+C:
 - A chime plays to signal completion.
 - Your notes file opens automatically in your default editor.

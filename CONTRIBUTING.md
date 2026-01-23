@@ -19,6 +19,13 @@ Thank you for your interest in contributing! This project aims to be the fastest
    python pomodoro.py
    ```
 
+## Requirements
+- **Python 3.7+**
+- **Rich**: Terminal UI/UX
+- **Pygame**: Audio support (Optional)
+- **Plyer**: Desktop notifications (Optional)
+- **Node.js**: For hosting the review dashboard (Optional)
+
 ## Naming & Style
 - **Python**: Follow PEP 8 guidelines.
 - **Scripts**: Ensure parity between `.bat`, `.ps1`, and `.sh` scripts. If you add a feature to one, please attempt to add it to all three.

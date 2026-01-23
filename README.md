@@ -2,19 +2,24 @@
 
 ![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)
 
-![Pomodoro CLI](assets/pomodoro_annotated.png)
+![Pomodoro CLI](assets/pomodoro_annotated_2.png)
 
 A high-performance, keyboard-centric Pomodoro timer designed for developers and power users who live in the terminal. Features a modern, colorful terminal UI powered by the **Rich** library.
 
 ## ✨ Features
 
-- **Rich Terminal UI**: Beautiful progress bars, color-coded time indicators, and a neon/cyberpunk color theme.
+- **Rich Terminal UI**: Beautiful progress bars, color-coded time indicators, and customizable themes.
 - **Live Progress Bar**: Visual countdown with color transitions (Green → Yellow → Red) as time runs out.
 - **Pause/Resume**: Pause the timer at any time with `Ctrl+P` without losing your place.
+- **Skip Phase**: Done early? Press `Ctrl+K` to instantly skip the current phase and move to the next.
+- **Themes & Customization**: Switch between 5 stunning color schemes (cyberpunk, minimal, forest, ocean, sunset).
+- **Session Templates**: Save and load your favorite timer configurations for repetitive tasks.
+- **Desktop Notifications**: Get native system notifications when a phase ends or timer pauses.
 - **Distraction-Free**: Runs entirely in your terminal with a blinking cursor ready for input.
 - **Integrated Note-Taking**: Capture thoughts instantly without stopping the timer or switching windows.
 - **Context-Aware Notes**: Each note is tagged with timestamp, phase, and elapsed minutes.
 - **Dynamic Terminal Title**: See current phase and remaining time in your taskbar/window title.
+- **Advanced Analytics**: Interactive dashboard with heatmap calendars, streak tracking, and productivity charts.
 - **Goal Setting**: Set your intentions before each cycle with customizable prompt styles.
 - **Cross-Platform**: Native launchers for Windows (`.bat`, `.ps1`) and Linux/macOS (`.sh`).
 - **Review System**: Built-in dashboard to visualize your sessions and generate AI summaries of your day.
@@ -69,6 +74,12 @@ python pomodoro.py -w 25 -n 5 -b 10 -c 4 --select-chime
 | `--cycles` | `-c` | 4 | Number of cycles to complete |
 | `--chime` | | None | Path to .wav file for chime sound |
 | `--select-chime` | | | Interactive selection from available .wav files |
+| `--theme` | | cyberpunk| Color theme (cyberpunk, minimal, forest, ocean, sunset) |
+| `--template` | `-t` | | Load settings from a saved template |
+| `--save-template`| | | Save current settings as a new template |
+| `--settings` | | | Open interactive settings configuration menu |
+| `--notifications`| | on | Enable or disable desktop notifications (on/off) |
+| `--toggle-notifications`| | | Toggle notifications on/off and exit |
 
 ## 📝 How It Works
 
@@ -76,8 +87,11 @@ python pomodoro.py -w 25 -n 5 -b 10 -c 4 --select-chime
 2. **Work Phase**: A progress bar counts down while you focus. Type notes anytime and press Enter.
 3. **Journal Phase**: Dedicated time to capture thoughts and reflect.
 4. **Break Phase**: Rest before the next cycle (skipped on last cycle).
-5. **Pause**: Press `Ctrl+P` to pause/resume the timer if you get interrupted.
-6. **Completion**: Chime plays and your notes file opens automatically.
+5. **Shortcuts**:
+    - `Ctrl+P`: **Pause/Resume** the timer.
+    - `Ctrl+K`: **Skip phase** and move to the next.
+    - `Ctrl+C`: **Stop** the timer and open notes.
+6. **Completion**: Chime plays, desktop notification appears, and your notes file opens automatically.
 
 ## 🎨 Visual Features
 
