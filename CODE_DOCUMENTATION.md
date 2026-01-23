@@ -81,6 +81,10 @@ This project is a multi-platform CLI Pomodoro timer designed for high productivi
     - **Productivity Graphs**: Powered by `Chart.js` to visualize note-taking and work phases with optimized x-axis and consistent ISO-date tooltips.
     - **Contextual Help**: Integrated info buttons with pulsing green glows providing tooltips for every analytics block.
     - **Precise Calculations**: Focus time is derived from actual timestamps (interval between cycle start and the last record before the next cycle) rather than fixed estimates.
+- **AI-Generated Daily Summary**:
+    - **Full Markdown Support**: Renders headings, lists (ordered/unordered), nested lists, code blocks, inline code, blockquotes, tables, links, and all standard markdown formatting.
+    - **Compact Spacing**: Optimized line-height (1.4) and reduced vertical margins for a clean, readable layout.
+    - **Collapsible Interface**: Toggle button with animated chevron icon to expand/collapse the summary, starting expanded by default.
 - **Data Loading**: Fetches and parses `pomodoro.txt`. Supports fallback to browser local storage for offline review.
 - **AI Integration**: Connects to Google Gemini API to transform raw logs into meaningful summaries.
 

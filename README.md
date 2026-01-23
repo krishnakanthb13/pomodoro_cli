@@ -26,6 +26,9 @@ A high-performance, keyboard-centric Pomodoro timer designed for developers and 
 - **Goal Setting**: Set your intentions before each cycle with customizable prompt styles.
 - **Cross-Platform**: Native launchers for Windows (`.bat`, `.ps1`) and Linux/macOS (`.sh`).
 - **Review System**: Built-in dashboard to visualize your sessions and generate AI summaries of your day.
+- **AI Summary with Full Markdown**: Daily summaries render with complete markdown formatting including headings, lists, code blocks, tables, and more.
+- **Compact Summary Layout**: Optimized spacing (line-height 1.4) for clean, readable AI-generated summaries.
+- **Collapsible Summary**: Toggle Daily Summary visibility with an animated chevron button for focused review.
 - **Auto-Open Notes**: Notes file opens automatically when you finish or stop the timer.
 
 ## 🚀 Quick Start
