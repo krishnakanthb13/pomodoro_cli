@@ -23,6 +23,15 @@ from rich.live import Live
 from rich.progress import Progress, BarColumn, TextColumn
 from rich.text import Text
 
+# Local modules
+from config_manager import load_config, get_setting, set_setting
+from themes import get_theme, list_themes, get_theme_info, DEFAULT_THEME
+from templates_manager import (
+    list_templates, load_template, save_template, 
+    format_template_list, get_template_by_index
+)
+import notifications
+
 # Initialize rich console
 console = Console()
 
@@ -43,18 +52,28 @@ warnings.filterwarnings("ignore", category=UserWarning, module="pygame")
 # Try multiple audio libraries
 AUDIO_AVAILABLE = False
 AUDIO_METHOD = None
-PHRASE_OPTION = 3  # 1: Goals, 2: Focus/Leap, 3: Adventure (Default)
 
-# UI Colors (Neon/Cyberpunk theme)
-COLOR_SEPARATOR = "cyan"
-COLOR_HEADER = "cyan"
-COLOR_INFO = "yellow"
-COLOR_TIP = "green"
-COLOR_SUCCESS = "green"
+# Load config and set globals
+CONFIG = load_config()
+PHRASE_OPTION = CONFIG.get("phrase_option", 3)
+CURSOR_BLINK_SPEED = CONFIG.get("cursor_blink_speed", 20)
+NOTIFICATIONS_ENABLED = CONFIG.get("notifications_enabled", True)
 
-# Cursor blink speed (frames per toggle at 50Hz)
-# Lower = Faster, Higher = Slower. Default: 10 (approx 0.2s)
-CURSOR_BLINK_SPEED = 20
+# Load theme from config
+THEME = get_theme(CONFIG.get("theme", DEFAULT_THEME))
+
+# UI Colors from theme
+COLOR_SEPARATOR = THEME["separator"]
+COLOR_HEADER = THEME["header"]
+COLOR_INFO = THEME["info"]
+COLOR_TIP = THEME["tip"]
+COLOR_SUCCESS = THEME["success"]
+COLOR_PROGRESS_LOW = THEME["progress_low"]
+COLOR_PROGRESS_MID = THEME["progress_mid"]
+COLOR_PROGRESS_HIGH = THEME["progress_high"]
+COLOR_PROGRESS_CRITICAL = THEME["progress_critical"]
+COLOR_CURSOR = THEME["cursor"]
+COLOR_PAUSED = THEME["paused"]
 
 # Try pygame first (most reliable)
 try:
@@ -97,6 +116,8 @@ class PomodoroTimer:
         self.line_buffer = ""  # Buffer for non-blocking input
         self.phase_start_time = None  # Track when each phase starts for elapsed time
         self.paused = False
+        self.skip_phase = False  # Flag to skip current phase early
+        self.notifications_enabled = NOTIFICATIONS_ENABLED
         
     def play_chime(self):
         """Play the chime sound using available method"""
@@ -230,6 +251,13 @@ class PomodoroTimer:
                             raise KeyboardInterrupt
                         elif char == '\x10':  # Ctrl+P
                             self.paused = not self.paused
+                            if self.notifications_enabled:
+                                if self.paused:
+                                    notifications.notify_paused()
+                                else:
+                                    notifications.notify_resumed()
+                        elif char == '\x0b':  # Ctrl+K - Skip phase
+                            self.skip_phase = True
                         elif ord(char) >= 32:  # Printable character
                             self.line_buffer += char
                             # Timer display will show this on next tick
@@ -243,6 +271,9 @@ class PomodoroTimer:
                              line = sys.stdin.read(1)
                              if line == '\x10':
                                  self.paused = not self.paused
+                                 continue
+                             if line == '\x0b':  # Ctrl+K - Skip phase
+                                 self.skip_phase = True
                                  continue
                              if line: # if char received
                                  # We need to accumulate chars similar to Windows logic ideally,
@@ -312,7 +343,7 @@ class PomodoroTimer:
         frame_count = 0
 
         with Live(console=console, refresh_per_second=20, transient=True) as live:
-            while remaining > 0 and not self.stop_timer:
+            while remaining > 0 and not self.stop_timer and not self.skip_phase:
                 # Process any queued notes
                 self.process_notes()
                 
@@ -321,14 +352,15 @@ class PomodoroTimer:
                 pct = elapsed / duration
 
                 # Green < 70% < Yellow < 80% < Red < 90%
+                # Green < 70% < Yellow < 80% < Red < 90%
                 if pct > 0.9:
-                    style = "red bold"
+                    style = COLOR_PROGRESS_CRITICAL
                 elif pct > 0.8:
-                    style = "red"
+                    style = COLOR_PROGRESS_HIGH
                 elif pct > 0.7:
-                    style = "yellow"
+                    style = COLOR_PROGRESS_MID
                 else:
-                    style = "green"
+                    style = COLOR_PROGRESS_LOW
 
                 # Update bar style
                 progress.columns[0].complete_style = style
@@ -347,10 +379,10 @@ class PomodoroTimer:
                     pass
 
                 # Manual blink logic for main loop tick
-                cursor_markup = "[green]█[/]" if blink_visible else " "
+                cursor_markup = f"[{COLOR_CURSOR}]█[/{COLOR_CURSOR}]" if blink_visible else " "
 
                 # Create the text line with emulated cursor
-                status_text = "[red bold](PAUSED) [/red bold]>> " if self.paused else ">> "
+                status_text = f"[{COLOR_PAUSED}](PAUSED) [/{COLOR_PAUSED}]>> " if self.paused else ">> "
                 timer_text = Text.from_markup(f"{phase_name} time: {mins:02d}:{secs:02d} remaining {status_text}{self.line_buffer}{cursor_markup}")
 
                 # Update the Live display
@@ -360,7 +392,7 @@ class PomodoroTimer:
                 # Update display 50 times per second for smoother typing/backspacing
                 # but only decrement timer once per second
                 for _ in range(50):
-                    if self.stop_timer:
+                    if self.stop_timer or self.skip_phase:
                         break
                     time.sleep(0.02)
                     self.process_notes()
@@ -371,10 +403,10 @@ class PomodoroTimer:
                         blink_visible = not blink_visible
                         frame_count = 0
 
-                    cursor_markup = "[green]█[/]" if blink_visible else " "
+                    cursor_markup = f"[{COLOR_CURSOR}]█[/{COLOR_CURSOR}]" if blink_visible else " "
 
                     # Update text with new input buffer
-                    status_text = "[red bold](PAUSED) [/red bold]>> " if self.paused else ">> "
+                    status_text = f"[{COLOR_PAUSED}](PAUSED) [/{COLOR_PAUSED}]>> " if self.paused else ">> "
                     timer_text = Text.from_markup(f"{phase_name} time: {mins:02d}:{secs:02d} remaining {status_text}{self.line_buffer}{cursor_markup}")
                     live.update(Group(progress, timer_text))
 
@@ -383,11 +415,23 @@ class PomodoroTimer:
                 elif self.phase_start_time:
                     self.phase_start_time += timedelta(seconds=1)
         
-        if not self.stop_timer:
+        if self.skip_phase:
+            # Phase was skipped
+            console.print(f"\r[{COLOR_INFO}]⏭️ {phase_name} phase skipped![/{COLOR_INFO}]{' '*20}")
+            console.print(f"[{COLOR_SEPARATOR}]{'='*60}[/{COLOR_SEPARATOR}]")
+            # Log skip to notes file
+            timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+            with open(self.notes_file, 'a', encoding='utf-8') as f:
+                f.write(f"{timestamp} ({phase_name} - SKIPPED)\n")
+            self.skip_phase = False  # Reset for next phase
+        elif not self.stop_timer:
             # We use transient=True, so the live display clears. We can just print normally.
             console.print(f"\r{phase_name} time: 00:00 - COMPLETED!{' '*20}")
             console.print(f"[{COLOR_SEPARATOR}]{'='*60}[/{COLOR_SEPARATOR}]")
             self.play_chime()
+            # Send desktop notification
+            if self.notifications_enabled:
+                notifications.notify_phase_complete(phase_name)
     
     def start(self):
         """Start the Pomodoro timer cycles"""
@@ -401,7 +445,7 @@ class PomodoroTimer:
         if AUDIO_AVAILABLE:
             console.print(f"[{COLOR_INFO}]Audio: {AUDIO_METHOD}[/{COLOR_INFO}]")
         console.print(f"[{COLOR_INFO}]Notes saved to: {self.notes_file}[/{COLOR_INFO}]")
-        console.print(f"[{COLOR_TIP}]💡 TIP: Press Ctrl+C to stop, Ctrl+P to pause/resume.[/{COLOR_TIP}]")
+        console.print(f"[{COLOR_TIP}]💡 Ctrl+C to stop | Ctrl+P to pause | Ctrl+K to skip phase[/{COLOR_TIP}]")
         console.print(f"[{COLOR_SEPARATOR}]{'='*60}[/{COLOR_SEPARATOR}]")
         
         # Start ONE note-listening thread for the entire session
@@ -495,7 +539,187 @@ def select_chime():
             return None
 
 
+def select_theme():
+    """Let user select a theme from available themes"""
+    themes = list_themes()
+    print("\nAvailable Themes:")
+    for i, name in enumerate(themes, 1):
+        info = get_theme_info().split('\n')[i+1] # Hacky but works to reuse description text
+        # Or just fetch clean list
+        print(f"  {i}. {name.capitalize()}")
+    
+    while True:
+        try:
+            choice = input(f"\nSelect theme (1-{len(themes)}) or press Enter to skip: ").strip()
+            if not choice:
+                return None
+            choice_num = int(choice)
+            if 1 <= choice_num <= len(themes):
+                return themes[choice_num - 1]
+            print("Invalid selection. Try again.")
+        except ValueError:
+            print("Please enter a number.")
+        except KeyboardInterrupt:
+            return None
+
+def select_template():
+    """Let user select a template from available templates"""
+    templates = list_templates()
+    if not templates:
+        return None
+        
+    print("\nAvailable Templates:")
+    for i, t in enumerate(templates, 1):
+        s = t["settings"]
+        print(f"  {i}. {t['name']} ({s.get('work')}m/{s.get('note')}m/{s.get('break')}m x{s.get('cycles')})")
+        
+    while True:
+        try:
+            choice = input(f"\nSelect template (1-{len(templates)}) or press Enter to skip: ").strip()
+            if not choice:
+                return None
+            choice_num = int(choice)
+            if 1 <= choice_num <= len(templates):
+                return templates[choice_num - 1]["settings"]
+            print("Invalid selection. Try again.")
+        except ValueError:
+            print("Please enter a number.")
+        except KeyboardInterrupt:
+            return None
+
+def run_custom_wizard():
+    """Interactive wizard for custom session setup"""
+    print("\n" + "="*40)
+    print("   CUSTOM SESSION CONFIGURATION")
+    print("="*40)
+    
+    # Defaults
+    work = 25
+    note = 5
+    break_time = 10
+    cycles = 4
+    chime_file = CONFIG.get("default_chime")
+    theme_name = CONFIG.get("theme", DEFAULT_THEME)
+    
+    # 1. Template
+    templates = list_templates()
+    if templates:
+        use_template = input("\nLoad from template? (y/N): ").lower().startswith('y')
+        if use_template:
+            template = select_template()
+            if template:
+                work = template.get("work", work)
+                note = template.get("note", note)
+                break_time = template.get("break", break_time)
+                cycles = template.get("cycles", cycles)
+                chime_file = template.get("chime", chime_file)
+                theme_name = template.get("theme", theme_name)
+                print(f"[green]✓ Loaded template settings[/green]")
+                
+                # Ask if user wants to modify anything from template?
+                # For now, let's assume template implies readiness, but maybe allow overrides?
+                # Simpler: If template loaded, skip to confirmation/start unless flags override (which args do)
+                # But here we are in wizard.
+                pass
+
+    # If no template selected, or asking for overrides (currently just manual if no template)
+    if not templates or (templates and not 'template' in locals()):
+        try:
+            w = input(f"\nWork duration [{work}]: ").strip()
+            if w: work = int(w)
+            
+            n = input(f"Note duration [{note}]: ").strip()
+            if n: note = int(n)
+            
+            b = input(f"Break duration [{break_time}]: ").strip()
+            if b: break_time = int(b)
+            
+            c = input(f"Cycles [{cycles}]: ").strip()
+            if c: cycles = int(c)
+        except ValueError:
+            print("Invalid number entered. Using defaults.")
+
+    # 2. Chime
+    if input(f"\nChange chime sound? (Current: {os.path.basename(str(chime_file)) if chime_file else 'None'}) (y/N): ").lower().startswith('y'):
+        c = select_chime()
+        if c: chime_file = c
+
+    # 3. Theme
+    if input(f"\nChange theme? (Current: {theme_name}) (y/N): ").lower().startswith('y'):
+        t = select_theme()
+        if t: theme_name = t
+        
+    return work, note, break_time, cycles, chime_file, theme_name
+
+
+def configure_settings():
+    """Interactive settings menu to configure all options"""
+    while True:
+        # Load fresh config each time
+        config = load_config()
+        
+        print("\n" + "="*40)
+        print("   POMODORO CONFIGURATION")
+        print("="*40)
+        print(f"1. Theme                [{config.get('theme', 'cyberpunk')}]")
+        print(f"2. Default Chime        [{os.path.basename(str(config.get('default_chime', 'None')))}]")
+        print(f"3. Phrase Style         [{'Adventure' if config.get('phrase_option') == 3 else 'Focus' if config.get('phrase_option') == 2 else 'Standard'}]")
+        print(f"4. Notifications        [{'Enabled' if config.get('notifications_enabled') else 'Disabled'}]")
+        print(f"5. Cursor Blink Speed   [{config.get('cursor_blink_speed', 20)}] (Higher = Slower)")
+        print("-" * 40)
+        print("0. Back to Main Menu")
+        
+        choice = input("\nSelect setting to change (0-5): ").strip()
+        
+        if choice == '1':
+            t = select_theme()
+            if t:
+                from config_manager import set_theme
+                set_theme(t)
+                print(f"[green]✓ Theme updated to: {t}[/green]")
+                
+        elif choice == '2':
+            print("\nSelect default chime sound:")
+            c = select_chime()
+            if c:
+                set_setting("default_chime", str(c))
+                print(f"[green]✓ Default chime updated[/green]")
+                
+        elif choice == '3':
+            print("\nPhrase Options:")
+            print("1. Standard (What is your goal?)")
+            print("2. Focus (What Leap to take?)")
+            print("3. Adventure (What Adventure to take?)")
+            try:
+                p = int(input("Select style (1-3): "))
+                if 1 <= p <= 3:
+                    set_setting("phrase_option", p)
+                    print(f"[green]✓ Phrase style updated[/green]")
+            except ValueError:
+                pass
+                
+        elif choice == '4':
+            current = config.get("notifications_enabled", True)
+            set_setting("notifications_enabled", not current)
+            print(f"[green]✓ Notifications {'enabled' if not current else 'disabled'}[/green]")
+            
+        elif choice == '5':
+            try:
+                s = int(input("\nEnter blink speed (10-50, default 20): "))
+                if 10 <= s <= 50:
+                    set_setting("cursor_blink_speed", s)
+                    print(f"[green]✓ Blink speed updated[/green]")
+            except ValueError:
+                pass
+                
+        elif choice == '0':
+            break
+
+
 def main():
+    global THEME, COLOR_SEPARATOR, COLOR_HEADER, COLOR_INFO, COLOR_TIP, COLOR_SUCCESS
+    global COLOR_PROGRESS_LOW, COLOR_PROGRESS_MID, COLOR_PROGRESS_HIGH, COLOR_PROGRESS_CRITICAL
+    global COLOR_CURSOR, COLOR_PAUSED
     parser = argparse.ArgumentParser(
         description='CLI Pomodoro Timer with note-taking capability',
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -507,33 +731,152 @@ Examples:
     # With a custom sound file
     python pomodoro.py -w 25 -n 5 -b 10 -c 4 --chime mysound.wav
 
-    # Interactive sound selection
-    python pomodoro.py -w 25 -n 5 -b 10 -c 4 --select-chime
+    # Interactive Settings Menu
+    python pomodoro.py --settings
 
-    # Quick test (1 min each phase)
-    python pomodoro.py -w 1 -n 1 -b 1 -c 2
+    # Use a saved template
+    python pomodoro.py --template deep_work
         """
     )
     
-    parser.add_argument('--work', '-w', type=int, default=25,
+    # Timer settings
+    parser.add_argument('--work', '-w', type=int, default=None,
                         help='Work duration in minutes (default: 25)')
-    parser.add_argument('--note', '-n', type=int, default=5,
+    parser.add_argument('--note', '-n', type=int, default=None,
                         help='Note-taking duration in minutes (default: 5)')
-    parser.add_argument('--break', '-b', type=int, default=10, dest='break_time',
+    parser.add_argument('--break', '-b', type=int, default=None, dest='break_time',
                         help='Break duration in minutes (default: 10)')
-    parser.add_argument('--cycles', '-c', type=int, default=4,
+    parser.add_argument('--cycles', '-c', type=int, default=None,
                         help='Number of cycles to complete (default: 4)')
+    
+    # Audio options
     parser.add_argument('--chime', type=str, default=None,
                         help='Path to .wav file for chime sound')
     parser.add_argument('--select-chime', action='store_true',
                         help='Select chime from available .wav files')
     
+    # Template options
+    parser.add_argument('--template', '-t', type=str, default=None,
+                        help='Load settings from a saved template')
+    parser.add_argument('--save-template', type=str, default=None, metavar='NAME',
+                        help='Save current settings as a new template')
+    parser.add_argument('--list-templates', action='store_true',
+                        help='List all saved templates and exit')
+    
+    # Theme options
+    parser.add_argument('--theme', type=str, default=None,
+                        help='Color theme (cyberpunk, minimal, forest, ocean, sunset)')
+    parser.add_argument('--list-themes', action='store_true',
+                        help='List available themes and exit')
+    parser.add_argument('--set-theme', type=str, default=None, metavar='THEME',
+                        help='Set default theme in config and exit')
+    parser.add_argument('--configure-theme', action='store_true',
+                        help='(Legacy) Interactively select and set the default theme')
+    parser.add_argument('--select-theme', action='store_true',
+                        help='Select theme from available list interactively')
+    
+    # Custom Wizard
+    parser.add_argument('--custom', action='store_true',
+                        help='Run interactive custom session wizard')
+    
+    # Settings
+    parser.add_argument('--settings', action='store_true',
+                        help='Open interactive settings configuration menu')
+
+    # Notification options
+    parser.add_argument('--notifications', type=str, choices=['on', 'off'], default=None,
+                        help='Enable or disable desktop notifications')
+    parser.add_argument('--toggle-notifications', action='store_true',
+                        help='Toggle notifications on/off and exit')
+    
     args = parser.parse_args()
     
-    # Handle chime selection
-    chime_file = args.chime
+    # Handle info-only commands first
+    if args.list_themes:
+        console.print(get_theme_info())
+        return
+
+    if args.settings or args.configure_theme:
+        configure_settings()
+        return
+    
+    if args.list_templates:
+        console.print(format_template_list())
+        return
+    
+    if args.set_theme:
+        from config_manager import set_theme
+        if set_theme(args.set_theme):
+            console.print(f"[{COLOR_SUCCESS}]✓ Default theme set to: {args.set_theme}[/{COLOR_SUCCESS}]")
+        else:
+            console.print(f"[{COLOR_INFO}]✗ Unknown theme: {args.set_theme}[/{COLOR_INFO}]")
+            console.print(get_theme_info())
+        return
+    
+    if args.toggle_notifications:
+        from config_manager import toggle_notifications
+        new_state = toggle_notifications()
+        status = "enabled" if new_state else "disabled"
+        console.print(f"[{COLOR_SUCCESS}]✓ Desktop notifications: {status}[/{COLOR_SUCCESS}]")
+        return
+    
+    # Load defaults
+    work = 25
+    note = 5
+    break_time = 10
+    cycles = 4
+    chime_file = CONFIG.get("default_chime")
+    
+    # Use global THEME name for initial setup if needed, but THEME dict is already loaded
+    # We might need to reload THEME if user changes it via args
+    current_theme_name = CONFIG.get("theme", DEFAULT_THEME)
+
+    # 1. Custom Wizard (Lowest Priority - gets overwritten by CLI args if mixed, but usually sets the base)
+    if args.custom:
+        c_work, c_note, c_break, c_cycles, c_chime, c_theme = run_custom_wizard()
+        work = c_work
+        note = c_note
+        break_time = c_break
+        cycles = c_cycles
+        chime_file = c_chime
+        current_theme_name = c_theme
+
+    # 2. Template (Overrides defaults/wizard)
+    if args.template:
+        template = load_template(args.template)
+        if template:
+            work = template.get("work", work)
+            note = template.get("note", note)
+            break_time = template.get("break", break_time)
+            cycles = template.get("cycles", cycles)
+            chime_file = template.get("chime", chime_file)
+            current_theme_name = template.get("theme", current_theme_name)
+            console.print(f"[{COLOR_SUCCESS}]✓ Loaded template: {template.get('name', args.template)}[/{COLOR_SUCCESS}]")
+        else:
+            console.print(f"[{COLOR_INFO}]Template '{args.template}' not found. Using defaults.[/{COLOR_INFO}]")
+    
+    # 3. CLI Arguments (Highest Priority overrides)
+    if args.work is not None:
+        work = args.work
+    if args.note is not None:
+        note = args.note
+    if args.break_time is not None:
+        break_time = args.break_time
+    if args.cycles is not None:
+        cycles = args.cycles
+    if args.chime:
+        chime_file = args.chime
+    if args.theme:
+        current_theme_name = args.theme
+    
+    # Interactive selections (Overrides previous)
     if args.select_chime:
-        chime_file = select_chime()
+        c = select_chime()
+        if c: chime_file = c
+        
+    if args.select_theme:
+        t = select_theme()
+        if t: current_theme_name = t
     
     # Smart path resolution for chime file
     if chime_file and not os.path.exists(chime_file):
@@ -541,15 +884,49 @@ Examples:
         possible_path = os.path.join("sounds", chime_file)
         if os.path.exists(possible_path):
             chime_file = possible_path
+            
+    # RELOAD THEME if it changed from default/config
+    # This ensures the Timer uses the correct colors
+    # global THEME, COLOR_SEPARATOR, COLOR_HEADER, COLOR_INFO, COLOR_TIP, COLOR_SUCCESS # Moved to top of main
+    THEME = get_theme(current_theme_name)
+    COLOR_SEPARATOR = THEME["separator"]
+    COLOR_HEADER = THEME["header"]
+    COLOR_INFO = THEME["info"]
+    COLOR_TIP = THEME["tip"]
+    COLOR_SUCCESS = THEME["success"]
+    COLOR_PROGRESS_LOW = THEME["progress_low"]
+    COLOR_PROGRESS_MID = THEME["progress_mid"]
+    COLOR_PROGRESS_HIGH = THEME["progress_high"]
+    COLOR_PROGRESS_CRITICAL = THEME["progress_critical"]
+    COLOR_CURSOR = THEME["cursor"]
+    COLOR_PAUSED = THEME["paused"]
+    
+    # Save template if requested
+    if args.save_template:
+        if save_template(args.save_template, work, note, break_time, cycles, 
+                        chime_file, current_theme_name):
+            console.print(f"[{COLOR_SUCCESS}]✓ Template saved: {args.save_template}[/{COLOR_SUCCESS}]")
+        else:
+            console.print(f"[red]✗ Failed to save template[/red]")
+        return
+    
+    # Handle notification setting for this session
+    if args.notifications:
+        global NOTIFICATIONS_ENABLED
+        NOTIFICATIONS_ENABLED = (args.notifications == 'on')
     
     # Create and start timer
     timer = PomodoroTimer(
-        work_min=args.work,
-        note_min=args.note,
-        break_min=args.break_time,
-        cycles=args.cycles,
+        work_min=work,
+        note_min=note,
+        break_min=break_time,
+        cycles=cycles,
         chime_file=chime_file
     )
+    
+    # Override notifications if specified
+    if args.notifications:
+        timer.notifications_enabled = (args.notifications == 'on')
     
     timer.start()
 

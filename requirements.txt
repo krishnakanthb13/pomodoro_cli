@@ -1,2 +1,6 @@
 pygame
 rich
+
+# Optional - for desktop notifications
+# pip install plyer
+plyer

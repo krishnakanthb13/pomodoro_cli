@@ -4,6 +4,9 @@ pomodoro_ai.txt
 RELEASE_NOTES.md
 SOCIAL_MEDIA.md
 
+# User Config (persists preferences)
+config.json
+
 # Python
 __pycache__/
 *.py[cod]

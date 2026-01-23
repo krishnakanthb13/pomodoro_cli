@@ -28,6 +28,8 @@ function Show-Menu {
     Write-Host ""
     Write-Host "  [R] Review Sessions      - View session history" -ForegroundColor Cyan
     Write-Host ""
+    Write-Host "  [S] Settings Configuration   - Configure all options" -ForegroundColor DarkCyan
+    Write-Host ""
     Write-Host "  [0] Exit" -ForegroundColor Red
     Write-Host ""
     Write-Host "════════════════════════════════════════════════════════════" -ForegroundColor Cyan
@@ -57,26 +59,13 @@ function Start-PomodoroSession {
 
 function Start-CustomSession {
     Clear-Host
-    Write-Host ""
-    Write-Host "═══════════════════════════════════════" -ForegroundColor Cyan
-    Write-Host "   CUSTOM POMODORO SETTINGS" -ForegroundColor Cyan
-    Write-Host "═══════════════════════════════════════" -ForegroundColor Cyan
-    Write-Host ""
-    
-    $work = Read-Host "Work duration (minutes)"
-    $note = Read-Host "Note-taking duration (minutes)"
-    $break = Read-Host "Break duration (minutes)"
-    $cycles = Read-Host "Number of cycles"
-    
-    Write-Host ""
-    Write-Host "Starting custom session..." -ForegroundColor Green
-    Start-PomodoroSession -Work $work -Notes $note -Break $break -Cycles $cycles -SelectChime
+    python pomodoro.py --custom
 }
 
 # Main loop
 do {
     Show-Menu
-    $choice = Read-Host "Enter your choice (0-9)"
+    $choice = Read-Host "Enter your choice (0-9/R/S)"
     
     switch ($choice) {
         "1" {
@@ -126,7 +115,11 @@ do {
             Clear-Host
             & ".\pomodoro_review.ps1"
             Clear-Host
-            Show-Menu
+        }
+        "S" {
+            Clear-Host
+            python pomodoro.py --settings
+            Read-Host "Press Enter to continue..."
         }
         "0" {
             Clear-Host

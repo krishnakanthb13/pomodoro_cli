@@ -29,13 +29,15 @@ echo  %ESC%[90m[9] Test Mode            - 01M work │ 01M notes │ 01M break �
 echo.
 echo  %ESC%[36m[R] Review Sessions      - View session history%ESC%[0m
 echo.
+echo  %ESC%[36m[S] Settings Configuration   - Configure all options%ESC%[0m
+echo.
 echo  %ESC%[31m[0] Exit%ESC%[0m
 echo.
 echo  %ESC%[96m════════════════════════════════════════════════════════════%ESC%[0m
 echo.
 
 set "choice="
-set /p choice="%ESC%[37mEnter your choice (0-9/R): %ESC%[0m"
+set /p choice="%ESC%[37mEnter your choice (0-9/R/S): %ESC%[0m"
 
 if "%choice%"=="1" goto DEEPFLOW
 if "%choice%"=="2" goto DEEPWORK
@@ -47,6 +49,7 @@ if "%choice%"=="7" goto ULTRA
 if "%choice%"=="8" goto CUSTOM
 if "%choice%"=="9" goto TEST
 if /i "%choice%"=="R" goto REVIEW
+if /i "%choice%"=="S" goto SETTINGS
 if "%choice%"=="0" goto EXIT
 
 echo Invalid choice! Please try again.
@@ -97,18 +100,7 @@ goto END
 
 :CUSTOM
 cls
-echo.
-echo  %ESC%[96m═══════════════════════════════════════%ESC%[0m
-echo    %ESC%[1mCUSTOM POMODORO SETTINGS%ESC%[0m
-echo  %ESC%[96m═══════════════════════════════════════%ESC%[0m
-echo.
-set /p work="%ESC%[37mWork duration (minutes): %ESC%[0m"
-set /p note="%ESC%[37mNote-taking duration (minutes): %ESC%[0m"
-set /p break="%ESC%[37mBreak duration (minutes): %ESC%[0m"
-set /p cycles="%ESC%[37mNumber of cycles: %ESC%[0m"
-echo.
-echo  %ESC%[92mStarting custom session...%ESC%[0m
-python pomodoro.py -w %work% -n %note% -b %break% -c %cycles% --select-chime
+python pomodoro.py --custom
 goto END
 
 :TEST
@@ -120,6 +112,12 @@ goto END
 :REVIEW
 cls
 call pomodoro_review.bat
+goto MENU
+
+:SETTINGS
+cls
+python pomodoro.py --settings
+pause
 goto MENU
 
 :END

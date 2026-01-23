@@ -28,6 +28,8 @@ Outputs: Renders interactive UI with entry lists, date navigation, AI summary di
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <!-- DOMPurify for XSS protection -->
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+    <!-- Chart.js for productivity graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         body {
@@ -47,6 +49,70 @@ Outputs: Renders interactive UI with entry lists, date navigation, AI summary di
         .prose-invert strong {
             color: #fff;
         }
+
+        /* Heatmap Calendar Styles */
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: repeat(53, 1fr);
+            gap: 2px;
+        }
+
+        .heatmap-cell {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .heatmap-cell:hover {
+            transform: scale(1.3);
+        }
+
+        .intensity-0 {
+            background: #1f2937;
+        }
+
+        .intensity-1 {
+            background: #065f46;
+        }
+
+        .intensity-2 {
+            background: #059669;
+        }
+
+        .intensity-3 {
+            background: #10b981;
+        }
+
+        .intensity-4 {
+            background: #34d399;
+        }
+
+        /* Stats Cards */
+        .stat-card {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            border: 1px solid #374151;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #06b6d4, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
     </style>
 </head>
 
@@ -56,14 +122,43 @@ Outputs: Renders interactive UI with entry lists, date navigation, AI summary di
     <script type="text/babel">
         // Main application script for Pomodoro Reviewer
         // Lucide Icons wrapper - optimized to run createIcons only once per icon update
+        // Lucide Icons wrapper - React Safe Version
+        // Uses innerHTML to avoid conflict between React VDOM and Lucide DOM replacement
         const Icon = ({ name, className }) => {
-            const iconRef = React.useRef(null);
+            const ref = React.useRef(null);
+
             React.useEffect(() => {
-                if (iconRef.current) {
-                    lucide.createIcons({ nodes: [iconRef.current] });
+                if (!ref.current) return;
+
+                // Convert kebab-case (e.g. "arrow-left") to PascalCase ("ArrowLeft")
+                const camelName = name
+                    .split('-')
+                    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+                    .join('');
+
+                const iconDef = lucide.icons[camelName];
+
+                if (iconDef) {
+                    // Clean up previous icon
+                    ref.current.innerHTML = '';
+
+                    // Create SVG element using Lucide's createElement
+                    // This is required for newer versions where .toSvg() was removed from icon objects
+                    const svgElement = lucide.createElement(iconDef);
+
+                    // Add custom classes
+                    if (className) {
+                        const existingClass = svgElement.getAttribute('class') || '';
+                        svgElement.setAttribute('class', `${existingClass} ${className}`.trim());
+                    }
+
+                    ref.current.appendChild(svgElement);
+                } else {
+                    console.warn(`Icon not found: ${name} (tried ${camelName})`);
                 }
-            }, [name]);
-            return <i ref={iconRef} data-lucide={name} className={className}></i>;
+            }, [name, className]);
+
+            return <span ref={ref} className="inline-flex items-center justify-center" />;
         };
 
         const Clock = ({ className }) => <Icon name="clock" className={className} />;
@@ -73,6 +168,77 @@ Outputs: Renders interactive UI with entry lists, date navigation, AI summary di
         const Sparkles = ({ className }) => <Icon name="sparkles" className={className} />;
         const Key = ({ className }) => <Icon name="key" className={className} />;
         const X = ({ className }) => <Icon name="x" className={className} />;
+        const BarChart3 = ({ className }) => <Icon name="bar-chart-3" className={className} />;
+        const Flame = ({ className }) => <Icon name="flame" className={className} />;
+        const TrendingUp = ({ className }) => <Icon name="trending-up" className={className} />;
+        const Activity = ({ className }) => <Icon name="activity" className={className} />;
+        const Grid = ({ className }) => <Icon name="grid-3x3" className={className} />;
+
+        const ProductivityChart = ({ labels, notesData, focusData, onBarClick }) => {
+            const chartRef = React.useRef(null);
+            const canvasRef = React.useRef(null);
+
+            React.useEffect(() => {
+                if (!canvasRef.current) return;
+
+                // Destroy existing chart if it exists
+                if (chartRef.current) {
+                    chartRef.current.destroy();
+                }
+
+                const ctx = canvasRef.current.getContext('2d');
+                chartRef.current = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Notes',
+                            data: notesData,
+                            backgroundColor: 'rgba(6, 182, 212, 0.7)',
+                            borderColor: 'rgb(6, 182, 212)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        onHover: (event, chartElement) => {
+                            event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
+                        },
+                        onClick: (event, elements) => {
+                            if (elements && elements.length > 0) {
+                                // Pass the index up
+                                onBarClick(elements[0].index);
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(255,255,255,0.1)' },
+                                ticks: { color: '#9ca3af' }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: '#9ca3af', maxRotation: 45 }
+                            }
+                        }
+                    }
+                });
+
+                // Cleanup on unmount or re-render
+                return () => {
+                    if (chartRef.current) {
+                        chartRef.current.destroy();
+                        chartRef.current = null;
+                    }
+                };
+            }, [labels, notesData, focusData]);
+
+            return <canvas ref={canvasRef} />;
+        };
 
         const TimeTracker = () => {
             const [entries, setEntries] = React.useState([]);
@@ -88,9 +254,19 @@ Outputs: Renders interactive UI with entry lists, date navigation, AI summary di
             const [isGenerating, setIsGenerating] = React.useState(false);
             const [summaries, setSummaries] = React.useState({}); // Changed from single summary to dictionary
 
+            // Analytics State
+            const [dailyStats, setDailyStats] = React.useState({});
+            const [streak, setStreak] = React.useState({ current: 0, longest: 0 });
+            const [heatmapData, setHeatmapData] = React.useState({});
+            const [chartRef, setChartRef] = React.useState(null);
+
             React.useEffect(() => {
                 loadData();
             }, []);
+
+            React.useEffect(() => {
+                window.scrollTo(0, 0);
+            }, [view]);
 
             React.useEffect(() => {
                 if (entries.length > 0) {
@@ -179,11 +355,196 @@ Outputs: Renders interactive UI with entry lists, date navigation, AI summary di
                 });
 
                 setGroupedDates(grouped);
+
+                // Calculate statistics when dates are extracted
+                calculateStats(uniqueDates);
+                calculateStreak(uniqueDates);
+                generateHeatmapData(uniqueDates);
+            };
+
+            // Calculate daily statistics
+            const calculateStats = (uniqueDates) => {
+                const stats = {};
+                uniqueDates.forEach(date => {
+                    const dateEntries = entries.filter(entry => {
+                        const entryDate = new Date(entry.timestamp).toISOString().split('T')[0];
+                        return entryDate === date;
+                    });
+
+                    // Count work phases (entries with "Work" tag)
+                    const workPhases = dateEntries.filter(e =>
+                        e.tag.toLowerCase().includes('work') ||
+                        e.tag.toLowerCase().includes('cycle')
+                    ).length;
+
+                    // Count notes (all entries that are actual notes)
+                    const notesCount = dateEntries.filter(e =>
+                        !e.tag.toLowerCase().includes('goal') &&
+                        !e.tag.toLowerCase().includes('skipped')
+                    ).length;
+
+                    // Estimate focus minutes (assume default 25 min per work phase)
+                    const focusMinutes = workPhases * 25;
+
+                    stats[date] = {
+                        workPhases,
+                        notesCount,
+                        focusMinutes,
+                        totalEntries: dateEntries.length
+                    };
+                });
+                setDailyStats(stats);
+            };
+
+            // Calculate streak
+            const calculateStreak = (uniqueDates) => {
+                if (uniqueDates.length === 0) {
+                    setStreak({ current: 0, longest: 0 });
+                    return;
+                }
+
+                // Sort dates in ascending order for streak calculation
+                const sortedDates = [...uniqueDates].sort();
+
+                let currentStreak = 1;
+                let longestStreak = 1;
+                let tempStreak = 1;
+
+                // Check if today or yesterday has entries (for current streak)
+                const today = new Date().toISOString().split('T')[0];
+                const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+                const hasRecentActivity = sortedDates.includes(today) || sortedDates.includes(yesterday);
+
+                // Calculate longest streak
+                for (let i = 1; i < sortedDates.length; i++) {
+                    const prevDate = new Date(sortedDates[i - 1]);
+                    const currDate = new Date(sortedDates[i]);
+                    const diffDays = (currDate - prevDate) / (1000 * 60 * 60 * 24);
+
+                    if (diffDays === 1) {
+                        tempStreak++;
+                        longestStreak = Math.max(longestStreak, tempStreak);
+                    } else {
+                        tempStreak = 1;
+                    }
+                }
+
+                // Calculate current streak (working backwards from today/yesterday)
+                if (hasRecentActivity) {
+                    const reversedDates = [...sortedDates].reverse();
+                    currentStreak = 1;
+                    for (let i = 1; i < reversedDates.length; i++) {
+                        const currDate = new Date(reversedDates[i - 1]);
+                        const prevDate = new Date(reversedDates[i]);
+                        const diffDays = (currDate - prevDate) / (1000 * 60 * 60 * 24);
+
+                        if (diffDays === 1) {
+                            currentStreak++;
+                        } else {
+                            break;
+                        }
+                    }
+                } else {
+                    currentStreak = 0;
+                }
+
+                setStreak({ current: currentStreak, longest: longestStreak });
+            };
+
+            // Generate heatmap data for the past year
+            const generateHeatmapData = (uniqueDates) => {
+                if (uniqueDates.length === 0) {
+                    setHeatmapData({});
+                    return;
+                }
+
+                // Determine full date range
+                // uniqueDates is sorted descending (newest first).
+                // So last element is oldest date.
+                const oldestDateStr = uniqueDates[uniqueDates.length - 1];
+                const newestDateStr = new Date().toISOString().split('T')[0]; // Always up to today
+
+                const startDate = new Date(oldestDateStr);
+                const endDate = new Date(newestDateStr);
+
+                // Adjust start date to the nearest preceding Sunday (to align weeks)
+                const startDay = startDate.getDay(); // 0 is Sunday
+                startDate.setDate(startDate.getDate() - startDay);
+
+                const heatmap = {};
+
+                // Fill in all days from start to end
+                for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                    const dateStr = d.toISOString().split('T')[0];
+                    heatmap[dateStr] = { intensity: 0, count: 0 };
+                }
+
+                // Fill in actual status
+                entries.forEach(entry => {
+                    const date = new Date(entry.timestamp).toISOString().split('T')[0];
+                    if (heatmap[date]) {
+                        heatmap[date].count += 1;
+                        const c = heatmap[date].count;
+                        if (c > 0) heatmap[date].intensity = 1;
+                        if (c >= 5) heatmap[date].intensity = 2;
+                        if (c >= 10) heatmap[date].intensity = 3;
+                        if (c >= 20) heatmap[date].intensity = 4;
+                    }
+                });
+
+                setHeatmapData(heatmap);
+            };
+
+            // Get weekly stats
+            const getWeeklyStats = () => {
+                const today = new Date();
+                const weekAgo = new Date(today);
+                weekAgo.setDate(today.getDate() - 7);
+
+                let totalFocus = 0;
+                let totalNotes = 0;
+                let totalPhases = 0;
+
+                Object.entries(dailyStats).forEach(([date, stats]) => {
+                    const dateObj = new Date(date);
+                    if (dateObj >= weekAgo && dateObj <= today) {
+                        totalFocus += stats.focusMinutes;
+                        totalNotes += stats.notesCount;
+                        totalPhases += stats.workPhases;
+                    }
+                });
+
+                return { totalFocus, totalNotes, totalPhases };
+            };
+
+            // Get all-time stats
+            const getAllTimeStats = () => {
+                let totalFocus = 0;
+                let totalNotes = 0;
+                let totalPhases = 0;
+
+                Object.values(dailyStats).forEach(stats => {
+                    totalFocus += stats.focusMinutes;
+                    totalNotes += stats.notesCount;
+                    totalPhases += stats.workPhases;
+                });
+
+                return { totalFocus, totalNotes, totalPhases, totalDays: Object.keys(dailyStats).length };
+            };
+
+            // Format minutes to hours and minutes
+            const formatDuration = (minutes) => {
+                const hours = Math.floor(minutes / 60);
+                const mins = minutes % 60;
+                if (hours === 0) return `${mins}m`;
+                return `${hours}h ${mins}m`;
             };
 
             const parseEntry = (line) => {
-                // Updated regex: colon after tag is now optional to handle entries like "(P) Disturbance!"
-                const regex = /\[(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})\]\s*\(([^)]*)\):?\s*(.+)/;
+                // Updated regex to handle:
+                // 1. Standard: [Timestamp] (Tag): Note
+                // 2. Skipped/Status: [Timestamp] (Work - SKIPPED)
+                const regex = /\[(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})\]\s*\(([^)]+)\)(?::?\s*(.*))?/;
                 const match = line.match(regex);
 
                 if (match) {
@@ -192,7 +553,7 @@ Outputs: Renders interactive UI with entry lists, date navigation, AI summary di
                     return {
                         timestamp: new Date(timestamp).toISOString(),
                         tag: tag.trim(),
-                        note: note.trim()
+                        note: note ? note.trim() : "" // Handle empty note
                     };
                 }
                 return null;
@@ -383,6 +744,7 @@ Use professional but encouraging tone and provide points.`,
                 setSelectedDate(dateStr);
                 // setSummary(null); // Removed: Do not clear summary on nav
                 setView('details'); // Explicitly switch to details view
+                window.scrollTo(0, 0);
             };
 
             // render markdown with XSS protection via DOMPurify
@@ -582,15 +944,20 @@ Use professional but encouraging tone and provide points.`,
                                 ))}
                             </div>
 
-                            <button
-                                onClick={() => {
-                                    setSelectedDate(null);
-                                    setView('all'); // Explicit explicit
-                                }}
-                                className="mt-4 w-full bg-gray-700 text-white py-2 px-4 rounded-lg hover:bg-gray-600 text-sm"
-                            >
-                                Back to All Entries
-                            </button>
+                            <div className="mt-4 flex gap-2">
+                                <button
+                                    onClick={() => setView('overview')}
+                                    className="flex-1 bg-gray-700 text-white py-2 px-4 rounded-lg hover:bg-gray-600 text-sm"
+                                >
+                                    Back to Dates
+                                </button>
+                                <button
+                                    onClick={() => setView('all')}
+                                    className="flex-1 bg-gray-700 text-white py-2 px-4 rounded-lg hover:bg-gray-600 text-sm"
+                                >
+                                    View All Entries
+                                </button>
+                            </div>
                         </div>
                     </div>
                 );
@@ -659,6 +1026,275 @@ Use professional but encouraging tone and provide points.`,
                             >
                                 View All Entries
                             </button>
+                            <button
+                                onClick={() => setView('analytics')}
+                                className="mt-2 w-full bg-gradient-to-r from-cyan-600 to-emerald-600 text-white py-2 px-4 rounded-lg hover:from-cyan-500 hover:to-emerald-500 text-sm flex items-center justify-center"
+                            >
+                                <BarChart3 className="w-4 h-4 mr-2" />
+                                View Analytics & Stats
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            // Analytics View
+            if (view === 'analytics') {
+                const weeklyStats = getWeeklyStats();
+                const allTimeStats = getAllTimeStats();
+
+                // Prepare chart data (last 14 days)
+                const chartLabels = [];
+                const chartNotesData = [];
+                const chartFocusData = [];
+                const today = new Date();
+
+                for (let i = 13; i >= 0; i--) {
+                    // Create a fresh date object for each iteration based on 'today'
+                    // This avoids any potential mutation reference issues
+                    const d = new Date(today);
+                    d.setDate(today.getDate() - i);
+
+                    const dateStr = d.toISOString().split('T')[0];
+
+                    // Prepare label
+                    let label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+                    // Add year to the first label (oldest date) or if it's Jan 1st
+                    if (i === 13 || (d.getMonth() === 0 && d.getDate() === 1)) {
+                        label += ` '${d.getFullYear().toString().slice(-2)}`;
+                    }
+
+                    chartLabels.push(label);
+
+                    const stats = dailyStats[dateStr] || { notesCount: 0, focusMinutes: 0 };
+                    chartNotesData.push(stats.notesCount);
+                    chartFocusData.push(stats.focusMinutes);
+                }
+
+                // Prepare heatmap weeks
+                const heatmapWeeks = [];
+                const heatmapDates = Object.keys(heatmapData).sort();
+                for (let i = 0; i < heatmapDates.length; i += 7) {
+                    heatmapWeeks.push(heatmapDates.slice(i, i + 7));
+                }
+
+                return (
+                    <div className="max-w-4xl mx-auto p-2 bg-gray-900 min-h-screen">
+                        <div className="bg-gray-800 rounded-lg shadow-lg p-4 border border-gray-700">
+                            {/* Header */}
+                            <div className="flex justify-between items-center mb-6 border-b border-gray-700 pb-3">
+                                <h2 className="text-xl font-bold text-gray-100 flex items-center">
+                                    <BarChart3 className="w-6 h-6 mr-2" />
+                                    Analytics & Statistics
+                                </h2>
+                                <button
+                                    onClick={() => setView('overview')}
+                                    className="flex items-center text-blue-400 hover:text-blue-300 text-sm"
+                                >
+                                    <ArrowLeft className="w-4 h-4 mr-1" />
+                                    Back to Overview
+                                </button>
+                            </div>
+
+                            {/* Streak Banner */}
+                            {/* Streak Banner */}
+                            {/* Streak Banner */}
+                            <div className="mb-6 flex flex-col sm:flex-row gap-4">
+                                {/* Current Streak */}
+                                <div className="flex-1 bg-gradient-to-r from-orange-900/30 to-red-900/30 border border-orange-500/30 rounded-lg p-4 flex flex-col items-center justify-center text-center">
+                                    <Flame className="w-10 h-10 text-orange-400 mb-2" />
+                                    <div>
+                                        <p className="text-orange-200/70 text-xs uppercase font-semibold">Current Streak</p>
+                                        <h3 className="text-2xl font-bold text-orange-400">
+                                            {streak.current} <span className="text-lg font-normal text-orange-400/70">days</span>
+                                        </h3>
+                                        {streak.current === 0 && (
+                                            <p className="text-xs text-orange-300/50 mt-1">Start today!</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Longest Streak */}
+                                <div className="flex-1 bg-gradient-to-r from-emerald-900/30 to-green-900/30 border border-emerald-500/30 rounded-lg p-4 flex flex-col items-center justify-center text-center">
+                                    <Icon name="trophy" className="w-10 h-10 text-emerald-400 mb-2" />
+                                    <div>
+                                        <p className="text-emerald-200/70 text-xs uppercase font-semibold">Longest Streak</p>
+                                        <h3 className="text-2xl font-bold text-emerald-400">
+                                            {streak.longest} <span className="text-lg font-normal text-emerald-400/70">days</span>
+                                        </h3>
+                                        <p className="text-xs text-emerald-300/50 mt-1">All-time best</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Stats Cards Grid */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                                <div className="stat-card">
+                                    <div className="stat-value">{formatDuration(allTimeStats.totalFocus)}</div>
+                                    <div className="stat-label">Total Focus Time</div>
+                                </div>
+                                <div className="stat-card">
+                                    <div className="stat-value">{allTimeStats.totalNotes}</div>
+                                    <div className="stat-label">Total Notes</div>
+                                </div>
+                                <div className="stat-card">
+                                    <div className="stat-value">{allTimeStats.totalPhases}</div>
+                                    <div className="stat-label">Work Phases</div>
+                                </div>
+                                <div className="stat-card">
+                                    <div className="stat-value">{allTimeStats.totalDays}</div>
+                                    <div className="stat-label">Active Days</div>
+                                </div>
+                            </div>
+
+                            {/* Weekly Stats */}
+                            <div className="mb-6 p-4 bg-gray-900/50 rounded-lg border border-gray-700 flex flex-wrap items-center justify-center gap-4 sm:gap-8">
+                                <h3 className="text-lg font-semibold text-gray-200 flex items-center min-w-fit">
+                                    <TrendingUp className="w-5 h-5 mr-2 text-emerald-400" />
+                                    This Week
+                                </h3>
+                                <div className="flex flex-wrap items-center gap-6 sm:gap-8 justify-center">
+                                    <div className="flex items-baseline md:items-center gap-2">
+                                        <p className="text-xl font-bold text-emerald-400">{formatDuration(weeklyStats.totalFocus)}</p>
+                                        <p className="text-xs text-gray-400 uppercase font-medium">Focus</p>
+                                    </div>
+                                    <div className="flex items-baseline md:items-center gap-2">
+                                        <p className="text-xl font-bold text-blue-400">{weeklyStats.totalNotes}</p>
+                                        <p className="text-xs text-gray-400 uppercase font-medium">Notes</p>
+                                    </div>
+                                    <div className="flex items-baseline md:items-center gap-2">
+                                        <p className="text-xl font-bold text-purple-400">{weeklyStats.totalPhases}</p>
+                                        <p className="text-xs text-gray-400 uppercase font-medium">Phases</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Charts Grid */}
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                                {/* Productivity Chart */}
+                                <div className="p-4 bg-gray-900/50 rounded-lg border border-gray-700 h-full flex flex-col">
+                                    <h3 className="text-lg font-semibold text-gray-200 mb-4 flex items-center">
+                                        <Activity className="w-5 h-5 mr-2 text-cyan-400" />
+                                        Activity (Last 14 Days)
+                                    </h3>
+                                    <div className="flex-1" style={{ minHeight: '200px' }}>
+                                        <ProductivityChart // Removed height styling from div and handled via flex
+                                            labels={chartLabels}
+                                            notesData={chartNotesData}
+                                            today={today}
+                                            onBarClick={(index) => {
+                                                const daysAgo = 13 - index;
+                                                const d = new Date(today);
+                                                d.setDate(today.getDate() - daysAgo);
+                                                const dateStr = d.toISOString().split('T')[0];
+                                                handleDateSelect(dateStr);
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Heatmap Calendar */}
+                                <div className="p-4 bg-gray-900/50 rounded-lg border border-gray-700 h-full flex flex-col">
+                                    <h3 className="text-lg font-semibold text-gray-200 mb-4 flex items-center">
+                                        <Grid className="w-5 h-5 mr-2 text-emerald-400" />
+                                        Activity Heatmap (Existing Range)
+                                    </h3>
+
+                                    <div className="flex-1 flex flex-col justify-center">
+                                        {/* Weekday labels and Grid Container */}
+                                        <div className="flex justify-center">
+                                            {/* Left Side Weekday Labels */}
+                                            <div className="flex flex-col gap-1 mr-2 mt-[20px] text-[9px] text-gray-500 leading-[12px] justify-between h-[111px]">
+                                                <div className="h-3 flex items-center"></div>
+                                                <div className="h-3 flex items-center">Mon</div>
+                                                <div className="h-3 flex items-center"></div>
+                                                <div className="h-3 flex items-center">Wed</div>
+                                                <div className="h-3 flex items-center"></div>
+                                                <div className="h-3 flex items-center">Fri</div>
+                                                <div className="h-3 flex items-center"></div>
+                                            </div>
+
+                                            {/* Heatmap Grid */}
+                                            <div className="overflow-x-auto pb-2 custom-scrollbar p-1 max-w-full">
+                                                <div className="flex gap-1">
+                                                    {heatmapWeeks.map((week, weekIdx) => {
+                                                        const firstDate = new Date(week[0]);
+                                                        // Get ISO Week Number
+                                                        const d = new Date(Date.UTC(firstDate.getFullYear(), firstDate.getMonth(), firstDate.getDate()));
+                                                        const dayNum = d.getUTCDay() || 7;
+                                                        d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+                                                        const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+                                                        const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+                                                        const year = firstDate.getFullYear();
+
+                                                        // Determine what label to show: Year if it changes or involves Jan 1, Week num otherwise occasionally?
+                                                        // Or just show week number every 4 weeks?
+                                                        const showYear = weekIdx === 0 || firstDate.getMonth() === 0 && firstDate.getDate() <= 7;
+                                                        const showWeek = weekIdx % 5 === 0;
+
+                                                        return (
+                                                            <div key={weekIdx} className="flex flex-col gap-1">
+                                                                {/* Header Label */}
+                                                                <div className="h-4 text-[9px] text-gray-500 text-center whitespace-nowrap overflow-visible relative">
+                                                                    {(showYear || showWeek) && (
+                                                                        <span className="absolute left-1/2 -translate-x-1/2 top-0">
+                                                                            {showYear ? year : `W${weekNo}`}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+
+                                                                {week.map(date => {
+                                                                    const data = heatmapData[date] || { intensity: 0, count: 0 };
+                                                                    return (
+                                                                        <div
+                                                                            key={date}
+                                                                            className={`heatmap-cell intensity-${data.intensity}`}
+                                                                            title={`${date}: ${data.count} entries`}
+                                                                            onClick={() => {
+                                                                                if (data.count > 0) {
+                                                                                    handleDateSelect(date);
+                                                                                }
+                                                                            }}
+                                                                        ></div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        )
+                                                    })}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Legend */}
+                                        <div className="flex items-center justify-center gap-2 mt-3 text-xs text-gray-400">
+                                            <span>Less</span>
+                                            <div className="heatmap-cell intensity-0" style={{ cursor: 'default' }}></div>
+                                            <div className="heatmap-cell intensity-1" style={{ cursor: 'default' }}></div>
+                                            <div className="heatmap-cell intensity-2" style={{ cursor: 'default' }}></div>
+                                            <div className="heatmap-cell intensity-3" style={{ cursor: 'default' }}></div>
+                                            <div className="heatmap-cell intensity-4" style={{ cursor: 'default' }}></div>
+                                            <span>More</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Navigation buttons */}
+                            <div className="mt-4 flex gap-2">
+                                <button
+                                    onClick={() => setView('overview')}
+                                    className="flex-1 bg-gray-700 text-white py-2 px-4 rounded-lg hover:bg-gray-600 text-sm"
+                                >
+                                    Back to Dates
+                                </button>
+                                <button
+                                    onClick={() => setView('all')}
+                                    className="flex-1 bg-gray-700 text-white py-2 px-4 rounded-lg hover:bg-gray-600 text-sm"
+                                >
+                                    View All Entries
+                                </button>
+                            </div>
                         </div>
                     </div>
                 );
@@ -726,8 +1362,52 @@ Use professional but encouraging tone and provide points.`,
             );
         };
 
+        // Error Boundary Component to catch render errors
+        class ErrorBoundary extends React.Component {
+            constructor(props) {
+                super(props);
+                this.state = { hasError: false, error: null, errorInfo: null };
+            }
+
+            static getDerivedStateFromError(error) {
+                return { hasError: true };
+            }
+
+            componentDidCatch(error, errorInfo) {
+                this.setState({ error: error, errorInfo: errorInfo });
+                console.error("React Error:", error, errorInfo);
+            }
+
+            render() {
+                if (this.state.hasError) {
+                    return (
+                        <div className="p-8 bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center">
+                            <h1 className="text-2xl font-bold text-red-500 mb-4">Something went wrong.</h1>
+                            <div className="bg-gray-800 p-4 rounded border border-red-700 max-w-2xl overflow-auto">
+                                <p className="font-mono text-sm text-red-300 mb-2">{this.state.error && this.state.error.toString()}</p>
+                                <pre className="font-mono text-xs text-gray-400 whitespace-pre-wrap">
+                                    {this.state.errorInfo && this.state.errorInfo.componentStack}
+                                </pre>
+                            </div>
+                            <button
+                                onClick={() => window.location.reload()}
+                                className="mt-6 bg-blue-600 px-4 py-2 rounded hover:bg-blue-500"
+                            >
+                                Reload Page
+                            </button>
+                        </div>
+                    );
+                }
+                return this.props.children;
+            }
+        }
+
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<TimeTracker />);
+        root.render(
+            <ErrorBoundary>
+                <TimeTracker />
+            </ErrorBoundary>
+        );
     </script>
 </body>
 
