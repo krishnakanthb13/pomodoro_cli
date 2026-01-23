@@ -973,6 +973,14 @@ Use professional but encouraging tone and provide points.`,
                                 Select a Date to Review
                             </h2>
 
+                            <button
+                                onClick={() => setView('analytics')}
+                                className="mb-4 w-full bg-gradient-to-r from-cyan-600 to-emerald-600 text-white py-2 px-4 rounded-lg hover:from-cyan-500 hover:to-emerald-500 text-sm flex items-center justify-center"
+                            >
+                                <BarChart3 className="w-4 h-4 mr-2" />
+                                View Analytics & Stats
+                            </button>
+
                             {dates.length === 0 ? (
                                 <p className="text-gray-500 text-center py-6">No entries found.</p>
                             ) : (
@@ -1025,13 +1033,6 @@ Use professional but encouraging tone and provide points.`,
                                 className="mt-4 w-full bg-gray-700 text-white py-2 px-4 rounded-lg hover:bg-gray-600 text-sm"
                             >
                                 View All Entries
-                            </button>
-                            <button
-                                onClick={() => setView('analytics')}
-                                className="mt-2 w-full bg-gradient-to-r from-cyan-600 to-emerald-600 text-white py-2 px-4 rounded-lg hover:from-cyan-500 hover:to-emerald-500 text-sm flex items-center justify-center"
-                            >
-                                <BarChart3 className="w-4 h-4 mr-2" />
-                                View Analytics & Stats
                             </button>
                         </div>
                     </div>
@@ -1318,6 +1319,14 @@ Use professional but encouraging tone and provide points.`,
                                 Review by Date
                             </button>
                         </div>
+
+                        <button
+                            onClick={() => setView('analytics')}
+                            className="mb-4 w-full bg-gradient-to-r from-cyan-600 to-emerald-600 text-white py-2 px-4 rounded-lg hover:from-cyan-500 hover:to-emerald-500 text-sm flex items-center justify-center"
+                        >
+                            <BarChart3 className="w-4 h-4 mr-2" />
+                            View Analytics & Stats
+                        </button>
 
                         {entries.length === 0 ? (
                             <p className="text-gray-500 text-center py-6">No entries found.</p>
