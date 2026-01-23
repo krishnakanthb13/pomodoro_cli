@@ -4,6 +4,8 @@
 
 ![Pomodoro CLI](assets/pomodoro_annotated_2.png)
 
+![Pomodoro Stats](assets/stats.png)
+
 A high-performance, keyboard-centric Pomodoro timer designed for developers and power users who live in the terminal. Features a modern, colorful terminal UI powered by the **Rich** library.
 
 ## ✨ Features
