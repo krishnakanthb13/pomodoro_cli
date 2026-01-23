@@ -1,0 +1,17 @@
+{
+    "name": "Cyberpunk",
+    "description": "Neon colors on dark background (Default)",
+    "separator": "cyan",
+    "header": "cyan",
+    "info": "yellow",
+    "tip": "green",
+    "success": "green",
+    "warning": "red",
+    "error": "bold red",
+    "progress_low": "green",
+    "progress_mid": "yellow",
+    "progress_high": "red",
+    "progress_critical": "bold red",
+    "cursor": "green",
+    "paused": "red bold"
+}

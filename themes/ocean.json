@@ -1,0 +1,17 @@
+{
+    "name": "Ocean",
+    "description": "Cool blues and teals",
+    "separator": "blue",
+    "header": "bright_blue",
+    "info": "cyan",
+    "tip": "bright_cyan",
+    "success": "bright_cyan",
+    "warning": "yellow",
+    "error": "red",
+    "progress_low": "bright_blue",
+    "progress_mid": "cyan",
+    "progress_high": "yellow",
+    "progress_critical": "red",
+    "cursor": "bright_cyan",
+    "paused": "yellow bold"
+}

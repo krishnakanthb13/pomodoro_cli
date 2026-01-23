@@ -1,0 +1,17 @@
+{
+    "name": "Minimal",
+    "description": "Clean, distraction-free monochrome",
+    "separator": "white",
+    "header": "bold white",
+    "info": "white",
+    "tip": "white",
+    "success": "bold white",
+    "warning": "white",
+    "error": "bold white",
+    "progress_low": "white",
+    "progress_mid": "white",
+    "progress_high": "bold white",
+    "progress_critical": "bold white",
+    "cursor": "white",
+    "paused": "bold white"
+}

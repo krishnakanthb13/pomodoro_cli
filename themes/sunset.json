@@ -1,0 +1,17 @@
+{
+    "name": "Sunset",
+    "description": "Warm oranges and purples",
+    "separator": "magenta",
+    "header": "bright_magenta",
+    "info": "yellow",
+    "tip": "bright_yellow",
+    "success": "bright_yellow",
+    "warning": "red",
+    "error": "bold red",
+    "progress_low": "bright_yellow",
+    "progress_mid": "yellow",
+    "progress_high": "red",
+    "progress_critical": "bold red",
+    "cursor": "bright_yellow",
+    "paused": "red bold"
+}
