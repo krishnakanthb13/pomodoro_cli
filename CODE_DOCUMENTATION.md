@@ -85,6 +85,12 @@ This project is a multi-platform CLI Pomodoro timer designed for high productivi
     - **Full Markdown Support**: Renders headings, lists (ordered/unordered), nested lists, code blocks, inline code, blockquotes, tables, links, and all standard markdown formatting.
     - **Compact Spacing**: Optimized line-height (1.4) and reduced vertical margins for a clean, readable layout.
     - **Collapsible Interface**: Toggle button with animated chevron icon to expand/collapse the summary, starting expanded by default.
+- **Enhanced Navigation**:
+    - **Collapsible Date Lists**: Year and month sections can be collapsed/expanded individually with animated chevron icons.
+    - **Collapse All/Expand All**: Quick controls to manage all date sections at once.
+    - **Consistent Button Layout**: Navigation buttons (Back to Dates, View All Entries) positioned at the top of each view for easy access.
+    - **Icon-Enhanced Buttons**: All navigation buttons include relevant icons for better visual clarity.
+- **Unified Page Layout**: All views use consistent width (`max-w-4xl`) and padding for a professional, cohesive appearance.
 - **Data Loading**: Fetches and parses `pomodoro.txt`. Supports fallback to browser local storage for offline review.
 - **AI Integration**: Connects to Google Gemini API to transform raw logs into meaningful summaries.
 

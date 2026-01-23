@@ -41,6 +41,9 @@ Productivity is an infinite game. The new **Analytics Dashboard** transforms raw
 - **Streak Counters**: Gamify your focus by maintaining daily session streaks.
 - **Productivity Charts**: Identify patterns in your output across different days of the week.
 - **AI Summary Presentation**: Daily summaries support full markdown formatting (headings, lists, code blocks, tables) with compact spacing and a collapsible interface for easy scanning.
+- **Collapsible Navigation**: Year and month sections collapse/expand with smooth animations, keeping your date list organized and manageable.
+- **Quick Controls**: Collapse All/Expand All buttons for instant list management.
+- **Consistent Layout**: All pages maintain the same width and spacing for a professional, unified experience.
 
 ### 6. Intentional Start
 Before each cycle, the tool prompts you to set your **Adventure(s)** (or Goals/Focus—configurable). This small ritual:
