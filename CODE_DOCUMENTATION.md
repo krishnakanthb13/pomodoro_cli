@@ -55,7 +55,7 @@ This project is a multi-platform CLI Pomodoro timer designed for high productivi
 - **Input Handling**: 
     - Windows: Uses `msvcrt` for non-blocking key reads with character buffering.
     - Unix: Uses `select` and `sys.stdin` to achieve similar non-blocking behavior.
-- **State Management**: Tracks current phase (Work/Journal/Break), phase start time, and handles transitions automatically.
+- **State Management**: Tracks current phase (Work/Journal/Break), phase start time, and handles transitions automatically. Supports Pausing (`Ctrl+P`) which freezes the countdown and elapsed time tracking.
 - **Terminal Title**: Dynamically updates the terminal window title with current phase and remaining time.
 - **Data Persistence**: Appends all events (Goal setting, Phases, Notes) to `pomodoro.txt` with timestamps and elapsed time context.
 

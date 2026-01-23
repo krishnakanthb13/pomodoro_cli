@@ -10,7 +10,7 @@ import time
 import threading
 import sys
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 import queue
 import warnings
@@ -96,6 +96,7 @@ class PomodoroTimer:
         self.last_display_length = 0
         self.line_buffer = ""  # Buffer for non-blocking input
         self.phase_start_time = None  # Track when each phase starts for elapsed time
+        self.paused = False
         
     def play_chime(self):
         """Play the chime sound using available method"""
@@ -227,6 +228,8 @@ class PomodoroTimer:
                             # Timer display will update on next tick
                         elif char == '\x03':  # Ctrl+C
                             raise KeyboardInterrupt
+                        elif char == '\x10':  # Ctrl+P
+                            self.paused = not self.paused
                         elif ord(char) >= 32:  # Printable character
                             self.line_buffer += char
                             # Timer display will show this on next tick
@@ -238,6 +241,9 @@ class PomodoroTimer:
                          # Read line if available
                          try:
                              line = sys.stdin.read(1)
+                             if line == '\x10':
+                                 self.paused = not self.paused
+                                 continue
                              if line: # if char received
                                  # We need to accumulate chars similar to Windows logic ideally,
                                  # but for standard terminal, readline is safer if not in raw mode.
@@ -344,7 +350,8 @@ class PomodoroTimer:
                 cursor_markup = "[green]█[/]" if blink_visible else " "
 
                 # Create the text line with emulated cursor
-                timer_text = Text.from_markup(f"{phase_name} time: {mins:02d}:{secs:02d} remaining >> {self.line_buffer}{cursor_markup}")
+                status_text = "[red bold](PAUSED) [/red bold]>> " if self.paused else ">> "
+                timer_text = Text.from_markup(f"{phase_name} time: {mins:02d}:{secs:02d} remaining {status_text}{self.line_buffer}{cursor_markup}")
 
                 # Update the Live display
                 # User requested Group(progress, timer_text) - Progress ON TOP
@@ -367,10 +374,14 @@ class PomodoroTimer:
                     cursor_markup = "[green]█[/]" if blink_visible else " "
 
                     # Update text with new input buffer
-                    timer_text = Text.from_markup(f"{phase_name} time: {mins:02d}:{secs:02d} remaining >> {self.line_buffer}{cursor_markup}")
+                    status_text = "[red bold](PAUSED) [/red bold]>> " if self.paused else ">> "
+                    timer_text = Text.from_markup(f"{phase_name} time: {mins:02d}:{secs:02d} remaining {status_text}{self.line_buffer}{cursor_markup}")
                     live.update(Group(progress, timer_text))
 
-                remaining -= 1
+                if not self.paused:
+                    remaining -= 1
+                elif self.phase_start_time:
+                    self.phase_start_time += timedelta(seconds=1)
         
         if not self.stop_timer:
             # We use transient=True, so the live display clears. We can just print normally.
@@ -390,7 +401,7 @@ class PomodoroTimer:
         if AUDIO_AVAILABLE:
             console.print(f"[{COLOR_INFO}]Audio: {AUDIO_METHOD}[/{COLOR_INFO}]")
         console.print(f"[{COLOR_INFO}]Notes saved to: {self.notes_file}[/{COLOR_INFO}]")
-        console.print(f"[{COLOR_TIP}]💡 TIP: Press Ctrl+C at any time to stop the timer.[/{COLOR_TIP}]")
+        console.print(f"[{COLOR_TIP}]💡 TIP: Press Ctrl+C to stop, Ctrl+P to pause/resume.[/{COLOR_TIP}]")
         console.print(f"[{COLOR_SEPARATOR}]{'='*60}[/{COLOR_SEPARATOR}]")
         
         # Start ONE note-listening thread for the entire session

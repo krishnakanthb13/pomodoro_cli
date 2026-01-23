@@ -2,7 +2,7 @@
 
 ![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)
 
-![Pomodoro CLI](pomodoro_annotated.png)
+![Pomodoro CLI](assets/pomodoro_annotated.png)
 
 A high-performance, keyboard-centric Pomodoro timer designed for developers and power users who live in the terminal. Features a modern, colorful terminal UI powered by the **Rich** library.
 
@@ -10,6 +10,7 @@ A high-performance, keyboard-centric Pomodoro timer designed for developers and 
 
 - **Rich Terminal UI**: Beautiful progress bars, color-coded time indicators, and a neon/cyberpunk color theme.
 - **Live Progress Bar**: Visual countdown with color transitions (Green → Yellow → Red) as time runs out.
+- **Pause/Resume**: Pause the timer at any time with `Ctrl+P` without losing your place.
 - **Distraction-Free**: Runs entirely in your terminal with a blinking cursor ready for input.
 - **Integrated Note-Taking**: Capture thoughts instantly without stopping the timer or switching windows.
 - **Context-Aware Notes**: Each note is tagged with timestamp, phase, and elapsed minutes.
@@ -75,7 +76,8 @@ python pomodoro.py -w 25 -n 5 -b 10 -c 4 --select-chime
 2. **Work Phase**: A progress bar counts down while you focus. Type notes anytime and press Enter.
 3. **Journal Phase**: Dedicated time to capture thoughts and reflect.
 4. **Break Phase**: Rest before the next cycle (skipped on last cycle).
-5. **Completion**: Chime plays and your notes file opens automatically.
+5. **Pause**: Press `Ctrl+P` to pause/resume the timer if you get interrupted.
+6. **Completion**: Chime plays and your notes file opens automatically.
 
 ## 🎨 Visual Features
 
