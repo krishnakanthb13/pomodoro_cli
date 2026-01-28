@@ -20,6 +20,7 @@ A high-performance, keyboard-centric Pomodoro timer designed for developers and 
 - **Distraction-Free**: Runs entirely in your terminal with a blinking cursor ready for input.
 - **Integrated Note-Taking**: Capture thoughts instantly without stopping the timer or switching windows.
 - **Context-Aware Notes**: Each note is tagged with timestamp, phase, and elapsed minutes.
+- **Automated Phase Logging**: Automatically records the completion of every Work, Journal, and Break phase to your notes file.
 - **Dynamic Terminal Title**: See current phase and remaining time in your taskbar/window title.
 - **Advanced Analytics**: Interactive dashboard with heatmap calendars, streak tracking, activity charts, and contextual info tooltips.
 - **Accurate Focus Tracking**: Measures actual time spent working by tracking intervals between your notes and phase starts.
@@ -97,12 +98,13 @@ python pomodoro.py -w 25 -n 5 -b 10 -c 4 --select-chime
 2. **Work Phase**: A progress bar counts down while you focus. Type notes anytime and press Enter.
 3. **Journal Phase**: Dedicated time to capture thoughts and reflect.
 4. **Break Phase**: Rest before the next cycle (skipped on last cycle).
-5. **Shortcuts**:
+5. **Completion**: Chime plays, the phase completion is logged to your notes, and desktop notification appears.
+6. **Shortcuts**:
     - `Ctrl+P`: **Pause/Resume** the timer.
     - `Ctrl+K`: **Skip phase** and move to the next.
     - `Ctrl+O`: **Open notes file** in your default text editor.
     - `Ctrl+C`: **Stop** the timer and open notes.
-6. **Completion**: Chime plays, desktop notification appears, and your notes file opens automatically.
+7. **Session End**: Your notes file opens automatically to review your session.
 
 ## 🎨 Visual Features
 

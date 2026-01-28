@@ -32,6 +32,7 @@ Standard Pomodoro timers treat "Work" as a black box. This tool treats it as a *
 - Timestamp
 - Phase (Work vs Journal vs Break)
 - Elapsed time within the phase (e.g., `(Work - 14)`)
+- Automatic milestones for phase completion
 
 You create a detailed "Flight Recorder" of your session. Only by seeing *when* you get distracted or have an idea can you improve your workflow.
 

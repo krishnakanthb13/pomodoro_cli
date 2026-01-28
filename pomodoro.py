@@ -433,6 +433,12 @@ class PomodoroTimer:
             # We use transient=True, so the live display clears. We can just print normally.
             console.print(f"\r{phase_name} time: 00:00 - COMPLETED!{' '*20}")
             console.print(f"[{COLOR_SEPARATOR}]{'='*60}[/{COLOR_SEPARATOR}]")
+            
+            # Log completion to notes file
+            timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+            with open(self.notes_file, 'a', encoding='utf-8') as f:
+                f.write(f"{timestamp} ({phase_name} - COMPLETED)\n")
+
             self.play_chime()
             # Send desktop notification
             if self.notifications_enabled:

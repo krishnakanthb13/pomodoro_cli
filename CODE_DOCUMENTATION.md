@@ -18,7 +18,7 @@ This project is a multi-platform CLI Pomodoro timer designed for high productivi
   - Dynamic terminal title updates
 - **Goal Setting**: Configurable intention-setting prompts before cycles with 3 phrase options (Goals, Focus/Leap, Adventure).
 - **Journaling**: Asynchronous, non-blocking input queue allowing notes to be typed without pausing the timer.
-- **Context-Aware Notes**: Each note includes timestamp, phase label, and elapsed minutes within the current phase.
+- **Context-Aware Notes**: Each note includes timestamp, phase label, and elapsed minutes. Phase completions are also automatically logged.
 - **Audio Chimes**: Context-aware sounds for phase completion using pygame or winsound fallback.
 - **Persistence**: Human-readable log format (`pomodoro.txt`) that enables portability and simple parsing.
 - **Auto-Open Notes**: Automatically opens the notes file upon session completion or interruption, or manually via `Ctrl+O` during timer execution.
@@ -67,7 +67,7 @@ This project is a multi-platform CLI Pomodoro timer designed for high productivi
 - **Theme Engine**: Decoupled theme logic in `themes.py` allows for easy customization and switching between palettes without modifying the core logic.
 - **Template System**: `templates_manager.py` allows users to save any configuration (work/note/break/cycle/chime/theme) as a named template for instant recall.
 - **Data Persistence**: Settings are saved to `config.json` via `config_manager.py`, ensuring user preferences (Theme, Notifications, Cursor Speed) persist across sessions.
-- **Log Format**: Appends all events (Goal setting, Phases, Notes, Skips) to `pomodoro.txt` with UTF-8 encoding.
+- **Log Format**: Appends all events (Goal setting, Phases, Notes, Skips, Completions) to `pomodoro.txt` with UTF-8 encoding.
 
 ### 2. The Launchers
 - **Uniformity**: Each launcher (`.bat`, `.ps1`, `.sh`) implements the same menu system with 7 presets (e.g., Deep Work, Study Session), Session Review, and interactive Settings configuration.
