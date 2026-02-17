@@ -1,7 +1,7 @@
 {
     "name": "Forest",
     "description": "Calming nature-inspired greens",
-    "separator": "green",
+    "separator": "bright_green",
     "header": "bright_green",
     "info": "yellow",
     "tip": "bright_green",
@@ -13,5 +13,5 @@
     "progress_high": "red",
     "progress_critical": "bold red",
     "cursor": "bright_green",
-    "paused": "yellow bold"
+    "paused": "bold bright_yellow"
 }

@@ -24,12 +24,12 @@ echo  %ESC%[96m[5] Classic Pomodoro     - 25M work │ 05M notes │ 05M break �
 echo  %ESC%[33m[6] Quick Sprint         - 15M work │ 03M notes │ 05M break │ x6  ~ warm-up%ESC%[0m
 echo  %ESC%[33m[7] Ultra Sprint         - 10M work │ 02M notes │ 03M break │ x8  ~ momentum%ESC%[0m
 echo.
-echo  %ESC%[90m[8] Custom Settings      - Enter your own timings%ESC%[0m
-echo  %ESC%[90m[9] Test Mode            - 01M work │ 01M notes │ 01M break │ x2  ~ testing%ESC%[0m
+echo  %ESC%[36m[8] Custom Settings      - Enter your own timings%ESC%[0m
+echo  %ESC%[36m[9] Test Mode            - 01M work │ 01M notes │ 01M break │ x2  ~ testing%ESC%[0m
 echo.
-echo  %ESC%[36m[R] Review Sessions      - View session history%ESC%[0m
+echo  %ESC%[94m[R] Review Sessions      - View session history%ESC%[0m
 echo.
-echo  %ESC%[36m[S] Settings Configuration   - Configure all options%ESC%[0m
+echo  %ESC%[94m[S] Settings Configuration   - Configure all options%ESC%[0m
 echo.
 echo  %ESC%[31m[0] Exit%ESC%[0m
 echo.

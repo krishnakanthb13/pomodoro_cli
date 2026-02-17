@@ -19,6 +19,8 @@ import platform
 
 # Rich imports
 from rich.console import Console, Group
+from rich.panel import Panel
+from rich.rule import Rule
 from rich.live import Live
 from rich.progress import Progress, BarColumn, TextColumn
 from rich.text import Text
@@ -194,9 +196,7 @@ class PomodoroTimer:
             header_text = f"🚀 Before starting Cycle {cycle} of {self.cycles}, set your Adventure(s):"
             input_prompt = "What Adventures you have in mind? "
 
-        console.print(f"\n[{COLOR_SEPARATOR}]{'─'*60}[/{COLOR_SEPARATOR}]")
-        console.print(f"[{COLOR_HEADER}]{header_text}[/{COLOR_HEADER}]")
-        console.print(f"[{COLOR_SEPARATOR}]{'─'*60}[/{COLOR_SEPARATOR}]")
+        console.print(Rule(header_text, style=COLOR_HEADER))
         console.print()
         
         console.print(f"[{COLOR_TIP}]{input_prompt}[/{COLOR_TIP}]", end="")
@@ -316,9 +316,8 @@ class PomodoroTimer:
         self.phase_start_time = datetime.now()  # Track phase start for elapsed time in notes
         remaining = duration
         
-        console.print(f"\n[{COLOR_SEPARATOR}]{'='*60}[/{COLOR_SEPARATOR}]")
-        console.print(f"  [{COLOR_HEADER}]{phase_name.upper()} TIME STARTED[/{COLOR_HEADER}]")
-        console.print(f"[{COLOR_SEPARATOR}]{'='*60}[/{COLOR_SEPARATOR}]")
+
+        console.print(Rule(f"{phase_name.upper()} TIME STARTED", style=COLOR_HEADER))
         console.print(f"[{COLOR_TIP}]Type notes anytime and press Enter to save them.[/{COLOR_TIP}]")
         console.print() # Permanent gap after instructions
         
@@ -423,7 +422,7 @@ class PomodoroTimer:
         if self.skip_phase:
             # Phase was skipped
             console.print(f"\r[{COLOR_INFO}]⏭️ {phase_name} phase skipped![/{COLOR_INFO}]{' '*20}")
-            console.print(f"[{COLOR_SEPARATOR}]{'='*60}[/{COLOR_SEPARATOR}]")
+            console.print(Rule(style=COLOR_SEPARATOR))
             # Log skip to notes file
             timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
             with open(self.notes_file, 'a', encoding='utf-8') as f:
@@ -432,7 +431,7 @@ class PomodoroTimer:
         elif not self.stop_timer:
             # We use transient=True, so the live display clears. We can just print normally.
             console.print(f"\r{phase_name} time: 00:00 - COMPLETED!{' '*20}")
-            console.print(f"[{COLOR_SEPARATOR}]{'='*60}[/{COLOR_SEPARATOR}]")
+            console.print(Rule(style=COLOR_SEPARATOR))
             
             # Log completion to notes file
             timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
@@ -446,9 +445,7 @@ class PomodoroTimer:
     
     def start(self):
         """Start the Pomodoro timer cycles"""
-        console.print(f"\n[{COLOR_SEPARATOR}]{'='*60}[/{COLOR_SEPARATOR}]")
-        console.print(f"  [{COLOR_HEADER}]🍅 POMODORO TIMER STARTED[/{COLOR_HEADER}]")
-        console.print(f"[{COLOR_SEPARATOR}]{'='*60}[/{COLOR_SEPARATOR}]")
+        console.print(Rule("🍅 POMODORO TIMER STARTED", style=COLOR_HEADER))
         console.print(f"[{COLOR_INFO}]Cycles: {self.cycles}[/{COLOR_INFO}]", end=" | ")
         console.print(f"[{COLOR_INFO}]Work: {self.work_duration//60} min | Note: {self.note_duration//60} min | Break: {self.break_duration//60} min[/{COLOR_INFO}]")
         if self.chime_file:
@@ -457,7 +454,7 @@ class PomodoroTimer:
             console.print(f"[{COLOR_INFO}]Audio: {AUDIO_METHOD}[/{COLOR_INFO}]")
         console.print(f"[{COLOR_INFO}]Notes saved to: {self.notes_file} | Ctrl+O to open notes[/{COLOR_INFO}]")
         console.print(f"[{COLOR_TIP}]💡 Ctrl+C to stop | Ctrl+P to pause | Ctrl+K to skip phase[/{COLOR_TIP}]")
-        console.print(f"[{COLOR_SEPARATOR}]{'='*60}[/{COLOR_SEPARATOR}]")
+        console.print(Rule(style=COLOR_SEPARATOR))
         
         # Start ONE note-listening thread for the entire session
         note_thread = threading.Thread(target=self.listen_for_notes, daemon=True)
@@ -465,7 +462,7 @@ class PomodoroTimer:
         
         try:
             for cycle in range(1, self.cycles + 1):
-                console.print(f"\n[{COLOR_HEADER}]🔄 CYCLE {cycle} of {self.cycles}[/{COLOR_HEADER}]")
+                console.print(Rule(f"🔄 CYCLE {cycle} of {self.cycles}", style=COLOR_HEADER))
                 
                 # Ask for goal (note-taking disabled inside this function)
                 self.ask_for_goal(cycle)
@@ -480,9 +477,7 @@ class PomodoroTimer:
                 if cycle < self.cycles:
                     self.run_timer(self.break_duration, "Break")
             
-            console.print(f"\n\n[{COLOR_SEPARATOR}]{'='*60}[/{COLOR_SEPARATOR}]")
-            console.print(f"  [{COLOR_HEADER}]🎉 ALL CYCLES COMPLETED! Great work![/{COLOR_HEADER}]")
-            console.print(f"[{COLOR_SEPARATOR}]{'='*60}[/{COLOR_SEPARATOR}]")
+            console.print(Rule("🎉 ALL CYCLES COMPLETED! Great work!", style=COLOR_HEADER))
             console.print(f"[{COLOR_INFO}]📄 All notes saved to: {self.notes_file}[/{COLOR_INFO}]")
 
             try:
@@ -600,9 +595,8 @@ def select_template():
 
 def run_custom_wizard():
     """Interactive wizard for custom session setup"""
-    print("\n" + "="*40)
-    print("   CUSTOM SESSION CONFIGURATION")
-    print("="*40)
+    print("\n")
+    console.print(Rule("CUSTOM SESSION CONFIGURATION", style="bold red"))
     
     # Defaults
     work = 25
