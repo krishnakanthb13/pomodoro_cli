@@ -20,6 +20,8 @@ Productivity tools often force a choice between structure and flexibility.
 - **Progress Bar**: A color-coded progress bar transitions from green through yellow to red as time runs out, giving you an instant sense of urgency without requiring you to read numbers.
 - **Dynamic Terminal Title**: The window title always shows the current phase and remaining time—visible even when the terminal is minimized or in the taskbar.
 - **Visual Identity (Themes)**: A carefully curated set of color palettes (cyberpunk, forest, sunset, etc.) that allow users to personalize their focus environment to their mood.
+- **High-Visibility Mode**: All themes are calibrated for maximum contrast on dark backgrounds (`bright_cyan` vs `cyan`) to prevent eye strain during long sessions.
+- **Structured Launcher**: The menu system uses logical grouping ([FOCUS] vs [SPRINT] vs [TOOLS]) to reduce cognitive load when starting a session. It's not just a list; it's a workflow.
 - **Urgency Visualization**: Proactive color shifts in the progress bar (Green → Yellow → Red) act as a subtle biological trigger to re-engage with the task.
 
 ### 3. Personal Branding & Mood

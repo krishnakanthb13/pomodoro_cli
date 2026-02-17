@@ -34,6 +34,8 @@ A high-performance, keyboard-centric Pomodoro timer designed for developers and 
 - **Quick List Controls**: Collapse All/Expand All buttons for instant date list management.
 - **Icon-Enhanced Navigation**: All navigation buttons include relevant icons for better visual clarity.
 - **Unified Page Layout**: Consistent width and padding across all views for a professional appearance.
+- **Enhanced Visibility**: Themes now use bright color variants to ensure perfect readability on dark terminal backgrounds.
+- **Organized Launcher**: The `pomodoro.bat` launcher now features clear section headers and grouped presets for Focus, Sprints, and Tools.
 - **Auto-Open Notes**: Notes file opens automatically when you finish or stop the timer, or press `Ctrl+O` anytime during execution.
 
 ## 🚀 Quick Start

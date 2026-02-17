@@ -16,6 +16,8 @@ This project is a multi-platform CLI Pomodoro timer designed for high productivi
   - Animated progress bar with color transitions (Green → Yellow → Red)
   - Blinking cursor animation
   - Dynamic terminal title updates
+  - Full-width separator lines (Rules) for a cleaner layout
+- **Enhanced Visibility**: Themes (Cyberpunk, Ocean, Forest, Sunset) upgraded to use bright/bold color variants for high contrast on dark terminals.
 - **Goal Setting**: Configurable intention-setting prompts before cycles with 3 phrase options (Goals, Focus/Leap, Adventure).
 - **Journaling**: Asynchronous, non-blocking input queue allowing notes to be typed without pausing the timer.
 - **Context-Aware Notes**: Each note includes timestamp, phase label, and elapsed minutes. Phase completions are also automatically logged.
@@ -70,7 +72,8 @@ This project is a multi-platform CLI Pomodoro timer designed for high productivi
 - **Log Format**: Appends all events (Goal setting, Phases, Notes, Skips, Completions) to `pomodoro.txt` with UTF-8 encoding.
 
 ### 2. The Launchers
-- **Uniformity**: Each launcher (`.bat`, `.ps1`, `.sh`) implements the same menu system with 7 presets (e.g., Deep Work, Study Session), Session Review, and interactive Settings configuration.
+- **Organization**: The Windows launcher (`pomodoro.bat`) groups presets into logical sections ([FOCUS SESSIONS], [QUICK SPRINTS], [PRO MODE], [TOOLS]) for faster navigation.
+- **Uniformity**: Each launcher (`.bat`, `.ps1`, `.sh`) implements the same menu system with 7 presets, Session Review, and interactive Settings configuration.
 - **Argument Passing**: They parse user selection and construct the appropriate command line arguments for `pomodoro.py` (e.g., `-w 50 -n 10 -b 15 -c 3`).
 
 ### 3. The Reviewer

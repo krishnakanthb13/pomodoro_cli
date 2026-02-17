@@ -1,3 +1,23 @@
+# Release Notes - v1.1.8
+
+## 👁️ High-Visibility Themes & Organized Launcher
+
+This update focuses on visual accessibility and workflow organization, ensuring the CLI looks stunning and readable on any terminal background.
+
+### ✨ New Features
+
+- **High-Visibility Themes**: All dark themes (`cyberpunk`, `forest`, `ocean`, `sunset`) have been recalibrated with **bright color variants** (e.g., `bright_cyan`, `bright_green`). This ensures text pops against dark backgrounds, reducing eye strain.
+- **Rich UI Separators**: Replaced manual ASCII lines with semantic **Rich Rule components**, creating cleaner, continuous horizontal dividers with integrated text headers.
+- **Organized Launcher**: The `pomodoro.bat` menu is now grouped into logical sections:
+  - **[FOCUS SESSIONS]**: Deep Work, Flow, Study
+  - **[QUICK SPRINTS]**: Classic, Quick, Ultra
+  - **[TOOLS]**: Review, Settings, Custom
+
+### 📚 Documentation
+
+- **Comprehensive Update**: Refreshed `README.md`, `CODE_DOCUMENTATION.md`, and `DESIGN_PHILOSOPHY.md` to reflect the latest UI changes and design decisions.
+- **New Ideas**: Added `IDEAS.md` to track future feature concepts (Compact Mode, Task Integration, etc.).
+
 # Release Notes - v1.0.0
 
 ## 🚀 Initial Release
