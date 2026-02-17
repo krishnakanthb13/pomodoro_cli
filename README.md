@@ -2,7 +2,7 @@
 
 ![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)
 
-![Pomodoro CLI](assets/pomodoro_annotated_2.png)
+![Pomodoro CLI](assets/pomodoro-cli-v1.1.8.png)
 
 ![Pomodoro Stats](assets/stats.png)
 
