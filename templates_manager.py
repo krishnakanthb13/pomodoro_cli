@@ -19,6 +19,19 @@ def ensure_templates_dir():
     TEMPLATES_DIR.mkdir(exist_ok=True)
 
 
+def is_safe_path(path: Path) -> bool:
+    """Check if the path is within the TEMPLATES_DIR."""
+    try:
+        # Resolve both paths to handle '..' and symlinks
+        resolved_path = path.resolve()
+        resolved_templates_dir = TEMPLATES_DIR.resolve()
+        # Use relative_to for Python 3.7+ compatibility (is_relative_to is 3.9+)
+        resolved_path.relative_to(resolved_templates_dir)
+        return True
+    except (ValueError, RuntimeError):
+        return False
+
+
 def get_template_path(name: str) -> Path:
     """Get the path for a template file."""
     # Sanitize name for filename
@@ -61,7 +74,7 @@ def load_template(name: str) -> Optional[dict]:
     
     # Try exact filename match first
     path = TEMPLATES_DIR / f"{name.lower()}.json"
-    if path.exists():
+    if is_safe_path(path) and path.exists():
         try:
             with open(path, 'r', encoding='utf-8') as f:
                 return json.load(f)
@@ -118,7 +131,7 @@ def delete_template(name: str) -> bool:
     
     # Try exact filename match
     path = TEMPLATES_DIR / f"{name.lower()}.json"
-    if path.exists():
+    if is_safe_path(path) and path.exists():
         try:
             path.unlink()
             return True
