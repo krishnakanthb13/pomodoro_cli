@@ -4,6 +4,11 @@ from pathlib import Path
 from unittest.mock import patch
 import templates_manager
 
+@pytest.fixture(autouse=True)
+def reset_cache():
+    templates_manager._TEMPLATE_CACHE = None
+    yield
+
 @pytest.fixture
 def mock_templates_dir(tmp_path):
     # We need to patch TEMPLATES_DIR in the templates_manager module

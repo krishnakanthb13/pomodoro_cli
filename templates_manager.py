@@ -16,38 +16,30 @@ TEMPLATES_DIR = Path(__file__).parent / "templates"
 _TEMPLATE_CACHE = None
 
 
-def _populate_cache():
-    """Load all templates from disk into the global cache."""
-    global _TEMPLATE_CACHE
-    if _TEMPLATE_CACHE is not None:
-        return
+def ensure_templates_dir():
+    """Create templates directory if it doesn't exist."""
+    TEMPLATES_DIR.mkdir(exist_ok=True)
+
 
 def is_safe_path(path: Path) -> bool:
-    """Check if the path is within the TEMPLATES_DIR."""
+    """Check if the path is within the TEMPLATES_DIR to prevent path traversal."""
     try:
         # Resolve both paths to handle '..' and symlinks
         resolved_path = path.resolve()
         resolved_templates_dir = TEMPLATES_DIR.resolve()
-        # Use relative_to for Python 3.7+ compatibility (is_relative_to is 3.9+)
+        # Use relative_to to check if path starts with templates_dir
         resolved_path.relative_to(resolved_templates_dir)
         return True
     except (ValueError, RuntimeError):
         return False
 
 
-def get_template_path(name: str) -> Path:
-    """Get the path for a template file."""
-    # Sanitize name for filename
-    safe_name = "".join(c if c.isalnum() or c in "_- " else "_" for c in name)
-    safe_name = safe_name.strip().replace(" ", "_").lower()
-    return TEMPLATES_DIR / f"{safe_name}.json"
+def _populate_cache():
+    """Load all templates from disk into the global cache."""
+    global _TEMPLATE_CACHE
+    if _TEMPLATE_CACHE is not None:
+        return
 
-
-def list_templates() -> list:
-    """
-    Return list of available templates with their settings.
-    Returns: [{"name": str, "filename": str, "settings": dict}, ...]
-    """
     ensure_templates_dir()
     templates = []
     
@@ -66,11 +58,6 @@ def list_templates() -> list:
     # Sort by name
     templates.sort(key=lambda x: x["name"].lower())
     _TEMPLATE_CACHE = templates
-
-
-def ensure_templates_dir():
-    """Create templates directory if it doesn't exist."""
-    TEMPLATES_DIR.mkdir(exist_ok=True)
 
 
 def get_template_path(name: str) -> Path:
@@ -96,22 +83,23 @@ def load_template(name: str) -> Optional[dict]:
     Returns: dict with template settings or None if not found.
     """
     _populate_cache()
+    name_lower = name.lower()
     
-    # Try exact filename match first
-    path = TEMPLATES_DIR / f"{name.lower()}.json"
+    # 1. Try exact filename match first (for performance)
+    path = TEMPLATES_DIR / f"{name_lower}.json"
     if is_safe_path(path) and path.exists():
         try:
             with open(path, 'r', encoding='utf-8') as f:
                 return json.load(f)
         except (json.JSONDecodeError, IOError):
-            return None
+            pass # Fallback to searching cache
     
-    # Try exact filename match first (case-insensitive)
+    # 2. Try matching by filename in cache (case-insensitive)
     for t in _TEMPLATE_CACHE:
         if t["filename"].lower() == name_lower:
             return t["settings"].copy()
 
-    # Try matching by template name (case-insensitive)
+    # 3. Try matching by template name (case-insensitive)
     for t in _TEMPLATE_CACHE:
         if t["name"].lower() == name_lower:
             return t["settings"].copy()
@@ -164,11 +152,10 @@ def delete_template(name: str) -> bool:
     path = TEMPLATES_DIR / f"{name.lower()}.json"
     if is_safe_path(path) and path.exists():
         try:
-            if path.exists():
-                path.unlink()
-                # Invalidate cache
-                _TEMPLATE_CACHE = None
-                return True
+            path.unlink()
+            # Invalidate cache
+            _TEMPLATE_CACHE = None
+            return True
         except IOError:
             return False
 
