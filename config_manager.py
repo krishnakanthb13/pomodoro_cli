@@ -5,7 +5,6 @@ Handles loading, saving, and accessing persistent settings from config.json
 """
 
 import json
-import os
 from pathlib import Path
 
 # Config file path (same directory as script)

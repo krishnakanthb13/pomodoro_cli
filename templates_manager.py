@@ -6,7 +6,6 @@ Templates are stored as individual JSON files in the templates/ folder.
 """
 
 import json
-import os
 from pathlib import Path
 from typing import Optional
 
