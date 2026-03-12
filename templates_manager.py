@@ -13,6 +13,35 @@ from typing import Optional
 # Templates directory (same directory as script)
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 
+# Global cache for templates
+_TEMPLATE_CACHE = None
+
+
+def _populate_cache():
+    """Load all templates from disk into the global cache."""
+    global _TEMPLATE_CACHE
+    if _TEMPLATE_CACHE is not None:
+        return
+
+    ensure_templates_dir()
+    templates = []
+    
+    for file in TEMPLATES_DIR.glob("*.json"):
+        try:
+            with open(file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                templates.append({
+                    "name": data.get("name", file.stem),
+                    "filename": file.stem,
+                    "settings": data
+                })
+        except (json.JSONDecodeError, IOError):
+            continue
+    
+    # Sort by name
+    templates.sort(key=lambda x: x["name"].lower())
+    _TEMPLATE_CACHE = templates
+
 
 def ensure_templates_dir():
     """Create templates directory if it doesn't exist."""
@@ -32,24 +61,8 @@ def list_templates() -> list:
     Return list of available templates with their settings.
     Returns: [{"name": str, "filename": str, "settings": dict}, ...]
     """
-    ensure_templates_dir()
-    templates = []
-    
-    for file in TEMPLATES_DIR.glob("*.json"):
-        try:
-            with open(file, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-                templates.append({
-                    "name": data.get("name", file.stem),
-                    "filename": file.stem,
-                    "settings": data
-                })
-        except (json.JSONDecodeError, IOError):
-            continue
-    
-    # Sort by name
-    templates.sort(key=lambda x: x["name"].lower())
-    return templates
+    _populate_cache()
+    return _TEMPLATE_CACHE
 
 
 def load_template(name: str) -> Optional[dict]:
@@ -57,26 +70,19 @@ def load_template(name: str) -> Optional[dict]:
     Load a template by name or filename.
     Returns: dict with template settings or None if not found.
     """
-    ensure_templates_dir()
+    _populate_cache()
     
-    # Try exact filename match first
-    path = TEMPLATES_DIR / f"{name.lower()}.json"
-    if path.exists():
-        try:
-            with open(path, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except (json.JSONDecodeError, IOError):
-            return None
+    name_lower = name.lower()
     
-    # Try matching by template name
-    for file in TEMPLATES_DIR.glob("*.json"):
-        try:
-            with open(file, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-                if data.get("name", "").lower() == name.lower():
-                    return data
-        except (json.JSONDecodeError, IOError):
-            continue
+    # Try exact filename match first (case-insensitive)
+    for t in _TEMPLATE_CACHE:
+        if t["filename"].lower() == name_lower:
+            return t["settings"].copy()
+
+    # Try matching by template name (case-insensitive)
+    for t in _TEMPLATE_CACHE:
+        if t["name"].lower() == name_lower:
+            return t["settings"].copy()
     
     return None
 
@@ -107,6 +113,11 @@ def save_template(name: str, work: int, note: int, break_time: int,
     try:
         with open(path, 'w', encoding='utf-8') as f:
             json.dump(template, f, indent=2)
+
+        # Invalidate cache
+        global _TEMPLATE_CACHE
+        _TEMPLATE_CACHE = None
+
         return True
     except IOError:
         return False
@@ -114,28 +125,36 @@ def save_template(name: str, work: int, note: int, break_time: int,
 
 def delete_template(name: str) -> bool:
     """Delete a template by name or filename."""
-    ensure_templates_dir()
+    global _TEMPLATE_CACHE
+    _populate_cache()
     
-    # Try exact filename match
-    path = TEMPLATES_DIR / f"{name.lower()}.json"
-    if path.exists():
+    name_lower = name.lower()
+    target_filename = None
+
+    # Try exact filename match first
+    for t in _TEMPLATE_CACHE:
+        if t["filename"].lower() == name_lower:
+            target_filename = t["filename"]
+            break
+
+    if not target_filename:
+        # Try matching by template name
+        for t in _TEMPLATE_CACHE:
+            if t["name"].lower() == name_lower:
+                target_filename = t["filename"]
+                break
+
+    if target_filename:
+        path = TEMPLATES_DIR / f"{target_filename}.json"
         try:
-            path.unlink()
-            return True
+            if path.exists():
+                path.unlink()
+                # Invalidate cache
+                _TEMPLATE_CACHE = None
+                return True
         except IOError:
             return False
-    
-    # Try matching by template name
-    for file in TEMPLATES_DIR.glob("*.json"):
-        try:
-            with open(file, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-                if data.get("name", "").lower() == name.lower():
-                    file.unlink()
-                    return True
-        except (json.JSONDecodeError, IOError):
-            continue
-    
+
     return False
 
 
@@ -163,5 +182,5 @@ def get_template_by_index(index: int) -> Optional[dict]:
     """Get a template by its index in the list (1-based)."""
     templates = list_templates()
     if 1 <= index <= len(templates):
-        return templates[index - 1]["settings"]
+        return templates[index - 1]["settings"].copy()
     return None
