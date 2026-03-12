@@ -16,6 +16,7 @@ A high-performance, keyboard-centric Pomodoro timer designed for developers and 
 - **Skip Phase**: Done early? Press `Ctrl+K` to instantly skip the current phase and move to the next.
 - **Themes & Customization**: Switch between 5 stunning color schemes (cyberpunk, minimal, forest, ocean, sunset).
 - **Session Templates**: Save and load your favorite timer configurations for repetitive tasks.
+- **High-Performance Caching**: Templates are cached in memory for near-instant access during sessions.
 - **Desktop Notifications**: Get native system notifications when a phase ends or timer pauses.
 - **Distraction-Free**: Runs entirely in your terminal with a blinking cursor ready for input.
 - **Integrated Note-Taking**: Capture thoughts instantly without stopping the timer or switching windows.
@@ -90,6 +91,7 @@ python pomodoro.py -w 25 -n 5 -b 10 -c 4 --select-chime
 | `--theme` | | cyberpunk| Color theme (cyberpunk, minimal, forest, ocean, sunset) |
 | `--template` | `-t` | | Load settings from a saved template |
 | `--save-template`| | | Save current settings as a new template |
+| `--list-templates`| | | List all saved templates and exit |
 | `--settings` | | | Open interactive settings configuration menu |
 | `--notifications`| | on | Enable or disable desktop notifications (on/off) |
 | `--toggle-notifications`| | | Toggle notifications on/off and exit |

@@ -58,6 +58,8 @@ Before each cycle, the tool prompts you to set your **Adventure(s)** (or Goals/F
 - **Zero-Install (mostly)**: Written in standard Python with two dependencies (`rich` for UI, `pygame` for audio).
 - **Universal Access**: Works on Windows (CMD/PowerShell), macOS, and Linux.
 - **Plain Text Data**: All data is stored in `pomodoro.txt`. No databases, no proprietary formats. You own your data forever.
+- **Performance Optimized**: Leverages global caching for template management to ensure zero lag in the terminal UI, even with hundreds of saved configurations.
+- **Security-First Management**: Strict path validation prevents path traversal vulnerabilities when managing templates, ensuring the application only interacts with its designated data folders.
 
 ### 8. Seamless Completion
 When your session ends or you press Ctrl+C:

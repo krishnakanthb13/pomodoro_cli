@@ -67,7 +67,7 @@ This project is a multi-platform CLI Pomodoro timer designed for high productivi
 - **State Management**: Tracks current phase (Work/Journal/Break), phase start time, and handles transitions automatically. Supports Pausing (`Ctrl+P`) which freezes the countdown and elapsed time tracking.
 - **Desktop Notifications**: Integrated with `plyer` to provide system-level notifications for phase transitions and session events.
 - **Theme Engine**: Decoupled theme logic in `themes.py` allows for easy customization and switching between palettes without modifying the core logic.
-- **Template System**: `templates_manager.py` allows users to save any configuration (work/note/break/cycle/chime/theme) as a named template for instant recall.
+- **Template System**: `templates_manager.py` allows users to save any configuration (work/note/break/cycle/chime/theme) as a named template for instant recall. Features a memory-resident cache to eliminate repeated disk scans.
 - **Data Persistence**: Settings are saved to `config.json` via `config_manager.py`, ensuring user preferences (Theme, Notifications, Cursor Speed) persist across sessions.
 - **Log Format**: Appends all events (Goal setting, Phases, Notes, Skips, Completions) to `pomodoro.txt` with UTF-8 encoding.
 
@@ -166,6 +166,9 @@ This project is a multi-platform CLI Pomodoro timer designed for high productivi
    - Local server starts hosting the directory.
    - Browser opens `pomodoro_review.html`.
    - App reads `pomodoro.txt` and renders the timeline.
+6. **Performance Optimization**:
+    - **Global Cache**: `templates_manager.py` uses a `_TEMPLATE_CACHE` to store loaded template data. This significantly speeds up operations like `list_templates()` and `get_template_by_index()` during interactive usage.
+    - **Cache Invalidation**: The cache is automatically invalidated when a template is saved or deleted, ensuring data consistency.
 
 ## Dependencies
 
