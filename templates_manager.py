@@ -6,7 +6,6 @@ Templates are stored as individual JSON files in the templates/ folder.
 """
 
 import json
-import os
 from pathlib import Path
 from typing import Optional
 
@@ -23,6 +22,32 @@ def _populate_cache():
     if _TEMPLATE_CACHE is not None:
         return
 
+def is_safe_path(path: Path) -> bool:
+    """Check if the path is within the TEMPLATES_DIR."""
+    try:
+        # Resolve both paths to handle '..' and symlinks
+        resolved_path = path.resolve()
+        resolved_templates_dir = TEMPLATES_DIR.resolve()
+        # Use relative_to for Python 3.7+ compatibility (is_relative_to is 3.9+)
+        resolved_path.relative_to(resolved_templates_dir)
+        return True
+    except (ValueError, RuntimeError):
+        return False
+
+
+def get_template_path(name: str) -> Path:
+    """Get the path for a template file."""
+    # Sanitize name for filename
+    safe_name = "".join(c if c.isalnum() or c in "_- " else "_" for c in name)
+    safe_name = safe_name.strip().replace(" ", "_").lower()
+    return TEMPLATES_DIR / f"{safe_name}.json"
+
+
+def list_templates() -> list:
+    """
+    Return list of available templates with their settings.
+    Returns: [{"name": str, "filename": str, "settings": dict}, ...]
+    """
     ensure_templates_dir()
     templates = []
     
@@ -72,7 +97,14 @@ def load_template(name: str) -> Optional[dict]:
     """
     _populate_cache()
     
-    name_lower = name.lower()
+    # Try exact filename match first
+    path = TEMPLATES_DIR / f"{name.lower()}.json"
+    if is_safe_path(path) and path.exists():
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except (json.JSONDecodeError, IOError):
+            return None
     
     # Try exact filename match first (case-insensitive)
     for t in _TEMPLATE_CACHE:
@@ -128,24 +160,9 @@ def delete_template(name: str) -> bool:
     global _TEMPLATE_CACHE
     _populate_cache()
     
-    name_lower = name.lower()
-    target_filename = None
-
-    # Try exact filename match first
-    for t in _TEMPLATE_CACHE:
-        if t["filename"].lower() == name_lower:
-            target_filename = t["filename"]
-            break
-
-    if not target_filename:
-        # Try matching by template name
-        for t in _TEMPLATE_CACHE:
-            if t["name"].lower() == name_lower:
-                target_filename = t["filename"]
-                break
-
-    if target_filename:
-        path = TEMPLATES_DIR / f"{target_filename}.json"
+    # Try exact filename match
+    path = TEMPLATES_DIR / f"{name.lower()}.json"
+    if is_safe_path(path) and path.exists():
         try:
             if path.exists():
                 path.unlink()
