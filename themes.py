@@ -6,7 +6,6 @@ Themes are stored as individual JSON files in the themes/ folder.
 """
 
 import json
-import os
 from pathlib import Path
 
 # Themes directory (same directory as script)
